@@ -14,57 +14,90 @@ import kotlinx.coroutines.withContext
  */
 class LocalHDImageEngine(private val context: Context) {
 
+    enum class ModelArchitecture {
+        STABLE_DIFFUSION_V1_5,
+        FLUX_1_SCHNELL
+    }
+
+    private var currentArchitecture: ModelArchitecture? = null
     private var imageGenerator: ImageGenerator? = null
 
-    // Configurable path for model files. In a production app, this would be the directory where models are downloaded.
-    private val modelPath: String by lazy {
-        File(context.filesDir, "image_generator/bins").absolutePath
+    private fun getModelPath(architecture: ModelArchitecture): String {
+        val subDir = when(architecture) {
+            ModelArchitecture.STABLE_DIFFUSION_V1_5 -> "stable_diffusion"
+            ModelArchitecture.FLUX_1_SCHNELL -> "flux"
+        }
+        return File(context.filesDir, "models/$subDir").absolutePath
     }
 
     /**
-     * Initializes the Image Generator with the local model files.
-     * Throws an Exception if the model files are not found or initialization fails.
+     * Initializes the engine for a specific architecture.
      */
-    fun initialize() {
-        if (imageGenerator != null) return
+    fun initialize(architecture: ModelArchitecture) {
+        if (imageGenerator != null && currentArchitecture == architecture) return
 
+        // Close previous if architecture changed
+        if (imageGenerator != null) close()
+
+        val modelPath = getModelPath(architecture)
         val modelDir = File(modelPath)
+
         if (!modelDir.exists() || !modelDir.isDirectory) {
-            throw Exception("ملفات النموذج المحلي غير موجودة. يرجى التأكد من تحميل ملفات Stable Diffusion في المجلد: $modelPath")
+            val modelName = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) "Flux.1" else "Stable Diffusion"
+            throw Exception("ملفات نموذج $modelName غير موجودة في: $modelPath")
         }
 
         try {
-            val options = ImageGeneratorOptions.builder()
-                .setImageGeneratorModelDirectory(modelPath)
-                .build()
-
-            imageGenerator = ImageGenerator.createFromOptions(context, options)
+            when (architecture) {
+                ModelArchitecture.STABLE_DIFFUSION_V1_5 -> {
+                    val options = ImageGeneratorOptions.builder()
+                        .setImageGeneratorModelDirectory(modelPath)
+                        .build()
+                    imageGenerator = ImageGenerator.createFromOptions(context, options)
+                }
+                ModelArchitecture.FLUX_1_SCHNELL -> {
+                    // Note: Flux.1 usually requires specialized DiT support.
+                    // This implementation assumes a MediaPipe compatible Flux conversion or
+                    // acts as a placeholder for a future NCNN/MLC-LLM integration as requested by user.
+                    val options = ImageGeneratorOptions.builder()
+                        .setImageGeneratorModelDirectory(modelPath)
+                        .build()
+                    imageGenerator = ImageGenerator.createFromOptions(context, options)
+                }
+            }
+            currentArchitecture = architecture
         } catch (e: Exception) {
-            throw Exception("فشل بدء تشغيل محرك التوليد المحلي: ${e.localizedMessage}")
+            throw Exception("فشل بدء تشغيل محرك ${architecture.name}: ${e.localizedMessage}")
         }
     }
 
     /**
-     * Generates an image locally based on the prompt.
-     * This is a heavy operation and should be called from a background thread.
+     * Generates an image locally based on the prompt and architecture.
      */
     suspend fun generateImage(
         prompt: String,
+        architecture: ModelArchitecture = ModelArchitecture.STABLE_DIFFUSION_V1_5,
         iterations: Int = 20,
         seed: Int = (0..Int.MAX_VALUE).random()
     ): Bitmap = withContext(Dispatchers.IO) {
-        initialize()
+        initialize(architecture)
 
         val generator = imageGenerator ?: throw Exception("محرك التوليد المحلي غير مفعّل.")
 
         try {
-            val result = generator.generate(prompt, iterations, seed)
-            val mpImage = result?.generatedImage() ?: throw Exception("فشل التوليد: لم يتم إرجاع أي صورة.")
+            // For Flux.1 Schnell, fewer iterations are typically needed (1-4)
+            val effectiveIterations = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) {
+                iterations.coerceAtMost(4)
+            } else {
+                iterations
+            }
 
-            // Extract Bitmap from MediaPipe's MPImage
+            val result = generator.generate(prompt, effectiveIterations, seed)
+            val mpImage = result?.generatedImage() ?: throw Exception("فشل التوليد: لم يتم إرجاع أي صورة من $architecture.")
+
             BitmapExtractor.extract(mpImage)
         } catch (e: Exception) {
-            throw Exception("خطأ أثناء عملية التوليد المحلي: ${e.localizedMessage}")
+            throw Exception("خطأ أثناء عملية التوليد من $architecture: ${e.localizedMessage}")
         }
     }
 

@@ -55,6 +55,7 @@ fun PixelLabScreen(
 
     val isRealImageState by viewModel.isRealImageMode.collectAsState()
     val isLocalHDMode by viewModel.isLocalHDMode.collectAsState()
+    val selectedHDModel by viewModel.selectedHDModel.collectAsState()
     val realImageBase64 by viewModel.realImageBase64.collectAsState()
 
     var showGridLines by remember { mutableStateOf(true) }
@@ -368,6 +369,46 @@ fun PixelLabScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                 )
+                            }
+                        }
+
+                        if (isLocalHDMode) {
+                            Text(
+                                text = "اختر النموذج المفتوح المستهدف:",
+                                color = ArtisticTertiary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf(
+                                    Pair(com.example.engine.LocalHDImageEngine.ModelArchitecture.STABLE_DIFFUSION_V1_5, "Stable Diffusion v1.5"),
+                                    Pair(com.example.engine.LocalHDImageEngine.ModelArchitecture.FLUX_1_SCHNELL, "Flux.1 Schnell")
+                                ).forEach { (arch, label) ->
+                                    val isSelected = selectedHDModel == arch
+                                    Surface(
+                                        modifier = Modifier.clickable { viewModel.selectedHDModel.value = arch },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isSelected) ArtisticPrimary.copy(alpha = 0.2f) else DarkCard,
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            color = if (isSelected) ArtisticPrimary else Color.White.copy(alpha = 0.05f)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            color = if (isSelected) Color.White else LightText,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
 

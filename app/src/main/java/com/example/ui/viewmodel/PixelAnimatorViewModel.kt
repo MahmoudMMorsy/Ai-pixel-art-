@@ -58,6 +58,7 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
     // --- Mode Control (Pixel Art vs Real HD Image Mode) ---
     val isRealImageMode = MutableStateFlow(false)
     val isLocalHDMode = MutableStateFlow(false) // Toggle for Local vs Cloud HD generation
+    val selectedHDModel = MutableStateFlow(LocalHDImageEngine.ModelArchitecture.STABLE_DIFFUSION_V1_5)
 
     private val _realImageBase64 = MutableStateFlow<String?>(null)
     val realImageBase64: StateFlow<String?> = _realImageBase64.asStateFlow()
@@ -221,7 +222,10 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
             stopAnimationPlayback()
             try {
                 if (isLocalHDMode.value) {
-                    val bitmap = localHDEngine.generateImage(prompt.value)
+                    val bitmap = localHDEngine.generateImage(
+                        prompt = prompt.value,
+                        architecture = selectedHDModel.value
+                    )
                     val base64 = bitmapToBase64(bitmap)
                     _realImageBase64.value = base64
                     _uiState.value = UiState.RealImageSuccess(base64)
