@@ -59,6 +59,7 @@ fun PixelLabScreen(
     val realImageBase64 by viewModel.realImageBase64.collectAsState()
 
     var showGridLines by remember { mutableStateOf(true) }
+    var showAdvancedSettings by remember { mutableStateOf(false) }
 
     // Set up standard creative recipes for pixel art prompting
     val promptRecipes = listOf(
@@ -321,6 +322,67 @@ fun PixelLabScreen(
                                             end = androidx.compose.ui.geometry.Offset(size.width, offset),
                                             strokeWidth = 1f
                                         )
+                                    }
+                                }
+                            }
+                        }
+
+                        // --- Advanced Settings & Model Center ---
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showAdvancedSettings = !showAdvancedSettings }
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (showAdvancedSettings) "إخفاء الخيارات المتقدمة" else "عرض الخيارات المتقدمة ⚙️",
+                                color = ArtisticTertiary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Icon(
+                                imageVector = if (showAdvancedSettings) Icons.Default.KeyboardArrowUp else Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = ArtisticTertiary,
+                                modifier = Modifier.size(16.dp).padding(start = 4.dp)
+                            )
+                        }
+
+                        AnimatedVisibility(visible = showAdvancedSettings) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(DarkCard.copy(alpha = 0.5f))
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "مركز النماذج والتحكم الدقيق",
+                                    color = LightText,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                // Placeholder for iteration slider and seed control
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("دقة المعالجة (Iterations):", color = MutedText, fontSize = 10.sp, modifier = Modifier.weight(1f))
+                                    Text("قيمة محسنة", color = ArtisticPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("الحالة:", color = MutedText, fontSize = 10.sp, modifier = Modifier.weight(1f))
+                                    Surface(
+                                        color = Color(0xFF10B981).copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(4.dp),
+                                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
+                                    ) {
+                                        Text("جاهز للاستخدام", color = Color(0xFF10B981), fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                     }
                                 }
                             }

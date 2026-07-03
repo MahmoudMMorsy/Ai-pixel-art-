@@ -7,6 +7,9 @@ import com.google.mediapipe.tasks.vision.imagegenerator.ImageGenerator
 import com.google.mediapipe.tasks.vision.imagegenerator.ImageGenerator.ImageGeneratorOptions
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 /**
@@ -72,7 +75,43 @@ class LocalHDImageEngine(private val context: Context) {
     }
 
     /**
-     * Generates an image locally based on the prompt and architecture.
+     * Generates an image locally with iterative feedback (Progressive Denoising).
+     * Emits intermediate bitmaps as the image is refined.
+     */
+    fun generateImageIterative(
+        prompt: String,
+        architecture: ModelArchitecture = ModelArchitecture.STABLE_DIFFUSION_V1_5,
+        iterations: Int = 20,
+        seed: Int = (0..Int.MAX_VALUE).random()
+    ): Flow<Bitmap> = flow {
+        initialize(architecture)
+        val generator = imageGenerator ?: throw Exception("محرك التوليد المحلي غير مفعّل.")
+
+        val effectiveIterations = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) {
+            iterations.coerceAtMost(4)
+        } else {
+            iterations
+        }
+
+        try {
+            // Initialize inputs for the iterative process
+            generator.setInputs(prompt, effectiveIterations, seed)
+
+            for (step in 0 until effectiveIterations) {
+                // Execute a single step and request intermediate result
+                val result = generator.execute(true)
+                val mpImage = result?.generatedImage()
+                if (mpImage != null) {
+                    emit(BitmapExtractor.extract(mpImage))
+                }
+            }
+        } catch (e: Exception) {
+            throw Exception("خطأ أثناء عملية التوليد التدرجي من $architecture: ${e.localizedMessage}")
+        }
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Generates an image locally based on the prompt and architecture (Non-iterative).
      */
     suspend fun generateImage(
         prompt: String,
@@ -85,7 +124,6 @@ class LocalHDImageEngine(private val context: Context) {
         val generator = imageGenerator ?: throw Exception("محرك التوليد المحلي غير مفعّل.")
 
         try {
-            // For Flux.1 Schnell, fewer iterations are typically needed (1-4)
             val effectiveIterations = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) {
                 iterations.coerceAtMost(4)
             } else {

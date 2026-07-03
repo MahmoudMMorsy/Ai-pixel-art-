@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pixel Animator</string>
-    <string name="local_hd_title">التوليد المحلي فائق الدقة (MediaPipe)</string>
-    <string name="cloud_hd_title">التوليد السحابي الذكي (Imagen)</string>
-    <string name="local_hd_desc">يستخدم هذا الوضع محرك MediaPipe للذكاء الاصطناعي لتوليد صور عالية الدقة مباشرة على جهازك دون الحاجة للإنترنت، مما يضمن خصوصية تامة.</string>
-    <string name="local_hd_requirement">تنبيه: يتطلب هذا الوضع وجود ملفات نموذج Stable Diffusion في ذاكرة الهاتف الداخلية.</string>
+    <string name="local_hd_title">مصفوفة المعالجة المحلية (On-Device AI)</string>
+    <string name="cloud_hd_title">محرك الانتشار السحابي (Cloud Diffusion)</string>
+    <string name="local_hd_desc">توليد احترافي فائق الدقة باستخدام وحدات المعالجة العصبية بالجهاز. يضمن هذا الوضع خصوصية البيانات الكاملة والعمل دون اتصال بالإنترنت.</string>
+    <string name="local_hd_requirement">يتطلب هذا الوضع تهيئة ملفات النماذج المفتوحة (SD/Flux) في مجلد البيانات الداخلي للتطبيق.</string>
 </resources>

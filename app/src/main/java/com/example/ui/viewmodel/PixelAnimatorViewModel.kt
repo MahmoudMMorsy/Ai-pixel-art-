@@ -222,13 +222,14 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
             stopAnimationPlayback()
             try {
                 if (isLocalHDMode.value) {
-                    val bitmap = localHDEngine.generateImage(
+                    localHDEngine.generateImageIterative(
                         prompt = prompt.value,
                         architecture = selectedHDModel.value
-                    )
-                    val base64 = bitmapToBase64(bitmap)
-                    _realImageBase64.value = base64
-                    _uiState.value = UiState.RealImageSuccess(base64)
+                    ).collect { bitmap ->
+                        val base64 = bitmapToBase64(bitmap)
+                        _realImageBase64.value = base64
+                        _uiState.value = UiState.RealImageSuccess(base64)
+                    }
                 } else {
                     val base64 = geminiEngine.generateRealImage(prompt.value)
                     _realImageBase64.value = base64
