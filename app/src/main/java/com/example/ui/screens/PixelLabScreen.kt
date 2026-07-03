@@ -54,6 +54,7 @@ fun PixelLabScreen(
     val localModelsList = viewModel.localModelsList
 
     val isRealImageState by viewModel.isRealImageMode.collectAsState()
+    val isLocalHDMode by viewModel.isLocalHDMode.collectAsState()
     val realImageBase64 by viewModel.realImageBase64.collectAsState()
 
     var showGridLines by remember { mutableStateOf(true) }
@@ -657,26 +658,84 @@ fun PixelLabScreen(
                             }
                         }
                     } else {
+                        // Operational mode switcher for HD Art
+                        Text(
+                            text = "طريقة التشغيل والموديل المستهدف:",
+                            color = MutedText,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(DarkCard)
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Button(
+                                onClick = { viewModel.isLocalHDMode.value = true },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isLocalHDMode) ArtisticPrimary else Color.Transparent,
+                                    contentColor = if (isLocalHDMode) Color.White else MutedText
+                                ),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                Text("محلي (MediaPipe)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            Button(
+                                onClick = { viewModel.isLocalHDMode.value = false },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (!isLocalHDMode) ArtisticSecondary else Color.Transparent,
+                                    contentColor = if (!isLocalHDMode) Color.White else MutedText
+                                ),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                Text("سحابي (Imagen)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
                         // Informational row for HD photorealistic generation
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = ArtisticSecondary.copy(alpha = 0.12f),
-                            border = BorderStroke(1.dp, ArtisticSecondary.copy(alpha = 0.3f)),
+                            color = (if (isLocalHDMode) ArtisticPrimary else ArtisticSecondary).copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, (if (isLocalHDMode) ArtisticPrimary else ArtisticSecondary).copy(alpha = 0.3f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text("💡", fontSize = 16.sp)
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(if (isLocalHDMode) "🏠" else "☁️", fontSize = 16.sp)
+                                    Text(
+                                        text = if (isLocalHDMode) context.getString(R.string.local_hd_title) else context.getString(R.string.cloud_hd_title),
+                                        color = LightText,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                                 Text(
-                                    text = "التوليد الواقعي بدقة عالية يستخدم نموذج Imagen السحابي للحصول على صور فوتوغرافية ولوحات فنية مذهلة مباشرة من خوادم الذكاء الاصطناعي.",
+                                    text = if (isLocalHDMode) context.getString(R.string.local_hd_desc) else "التوليد الواقعي بدقة عالية يستخدم نموذج Imagen السحابي للحصول على صور فوتوغرافية ولوحات فنية مذهلة مباشرة من خوادم الذكاء الاصطناعي.",
                                     color = LightText,
                                     fontSize = 11.sp,
-                                    lineHeight = 16.sp,
-                                    modifier = Modifier.weight(1f)
+                                    lineHeight = 16.sp
                                 )
+                                if (isLocalHDMode) {
+                                    Text(
+                                        text = context.getString(R.string.local_hd_requirement),
+                                        color = ArtisticTertiary,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
