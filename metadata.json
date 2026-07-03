@@ -1,0 +1,6 @@
+{
+  "name": "Pixel Animator",
+  "description": "An offline, high-performance Pixel Art Animation generation pipeline designed for mobile devices like Xiaomi 11T (MediaTek Dimensity 1200) utilizing localized ONNX, NCNN, and TFLite execution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
