@@ -1,10 +1,15 @@
 package com.example.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.graphics.Bitmap
+import android.util.Base64
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.engine.GeminiPixelEngine
+import com.example.engine.LocalHDImageEngine
 import com.example.engine.LocalPixelEngine
 import com.example.engine.PixelArtAnimationResponse
+import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,9 +25,10 @@ sealed interface UiState {
     data class Error(val message: String) : UiState
 }
 
-class PixelAnimatorViewModel : ViewModel() {
+class PixelAnimatorViewModel(application: Application) : AndroidViewModel(application) {
     private val geminiEngine = GeminiPixelEngine()
     private val localEngine = LocalPixelEngine()
+    private val localHDEngine = LocalHDImageEngine(application)
 
     // --- Core Parameters ---
     val prompt = MutableStateFlow("مكعب ناري متفجر يتلاشى")
@@ -51,6 +57,9 @@ class PixelAnimatorViewModel : ViewModel() {
 
     // --- Mode Control (Pixel Art vs Real HD Image Mode) ---
     val isRealImageMode = MutableStateFlow(false)
+    val isLocalHDMode = MutableStateFlow(false) // Toggle for Local vs Cloud HD generation
+    val selectedHDModel = MutableStateFlow(LocalHDImageEngine.ModelArchitecture.STABLE_DIFFUSION_V1_5)
+
     private val _realImageBase64 = MutableStateFlow<String?>(null)
     val realImageBase64: StateFlow<String?> = _realImageBase64.asStateFlow()
 
@@ -212,13 +221,36 @@ class PixelAnimatorViewModel : ViewModel() {
             _uiState.value = UiState.Loading
             stopAnimationPlayback()
             try {
-                val base64 = geminiEngine.generateRealImage(prompt.value)
-                _realImageBase64.value = base64
-                _uiState.value = UiState.RealImageSuccess(base64)
+                if (isLocalHDMode.value) {
+                    localHDEngine.generateImageIterative(
+                        prompt = prompt.value,
+                        architecture = selectedHDModel.value
+                    ).collect { bitmap ->
+                        val base64 = bitmapToBase64(bitmap)
+                        _realImageBase64.value = base64
+                        _uiState.value = UiState.RealImageSuccess(base64)
+                    }
+                } else {
+                    val base64 = geminiEngine.generateRealImage(prompt.value)
+                    _realImageBase64.value = base64
+                    _uiState.value = UiState.RealImageSuccess(base64)
+                }
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "حدث خطأ أثناء توليد الصورة الواقعية. يرجى التأكد من أن مفتاح الـ API مضاف بشكل صحيح.")
+                _uiState.value = UiState.Error(e.message ?: "حدث خطأ أثناء توليد الصورة الواقعية.")
             }
         }
+    }
+
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        localHDEngine.close()
     }
 
     private fun getActiveFrameCount(): Int {

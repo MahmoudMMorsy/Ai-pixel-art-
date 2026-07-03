@@ -54,9 +54,12 @@ fun PixelLabScreen(
     val localModelsList = viewModel.localModelsList
 
     val isRealImageState by viewModel.isRealImageMode.collectAsState()
+    val isLocalHDMode by viewModel.isLocalHDMode.collectAsState()
+    val selectedHDModel by viewModel.selectedHDModel.collectAsState()
     val realImageBase64 by viewModel.realImageBase64.collectAsState()
 
     var showGridLines by remember { mutableStateOf(true) }
+    var showAdvancedSettings by remember { mutableStateOf(false) }
 
     // Set up standard creative recipes for pixel art prompting
     val promptRecipes = listOf(
@@ -323,6 +326,67 @@ fun PixelLabScreen(
                                 }
                             }
                         }
+
+                        // --- Advanced Settings & Model Center ---
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showAdvancedSettings = !showAdvancedSettings }
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (showAdvancedSettings) "إخفاء الخيارات المتقدمة" else "عرض الخيارات المتقدمة ⚙️",
+                                color = ArtisticTertiary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Icon(
+                                imageVector = if (showAdvancedSettings) Icons.Default.KeyboardArrowUp else Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = ArtisticTertiary,
+                                modifier = Modifier.size(16.dp).padding(start = 4.dp)
+                            )
+                        }
+
+                        AnimatedVisibility(visible = showAdvancedSettings) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(DarkCard.copy(alpha = 0.5f))
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "مركز النماذج والتحكم الدقيق",
+                                    color = LightText,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                // Placeholder for iteration slider and seed control
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("دقة المعالجة (Iterations):", color = MutedText, fontSize = 10.sp, modifier = Modifier.weight(1f))
+                                    Text("قيمة محسنة", color = ArtisticPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("الحالة:", color = MutedText, fontSize = 10.sp, modifier = Modifier.weight(1f))
+                                    Surface(
+                                        color = Color(0xFF10B981).copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(4.dp),
+                                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
+                                    ) {
+                                        Text("جاهز للاستخدام", color = Color(0xFF10B981), fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     if (!isRealImageState) {
@@ -367,6 +431,46 @@ fun PixelLabScreen(
                                     fontWeight = FontWeight.SemiBold,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                 )
+                            }
+                        }
+
+                        if (isLocalHDMode) {
+                            Text(
+                                text = "اختر النموذج المفتوح المستهدف:",
+                                color = ArtisticTertiary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf(
+                                    Pair(com.example.engine.LocalHDImageEngine.ModelArchitecture.STABLE_DIFFUSION_V1_5, "Stable Diffusion v1.5"),
+                                    Pair(com.example.engine.LocalHDImageEngine.ModelArchitecture.FLUX_1_SCHNELL, "Flux.1 Schnell")
+                                ).forEach { (arch, label) ->
+                                    val isSelected = selectedHDModel == arch
+                                    Surface(
+                                        modifier = Modifier.clickable { viewModel.selectedHDModel.value = arch },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isSelected) ArtisticPrimary.copy(alpha = 0.2f) else DarkCard,
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            color = if (isSelected) ArtisticPrimary else Color.White.copy(alpha = 0.05f)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            color = if (isSelected) Color.White else LightText,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -657,26 +761,84 @@ fun PixelLabScreen(
                             }
                         }
                     } else {
+                        // Operational mode switcher for HD Art
+                        Text(
+                            text = "طريقة التشغيل والموديل المستهدف:",
+                            color = MutedText,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(DarkCard)
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Button(
+                                onClick = { viewModel.isLocalHDMode.value = true },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isLocalHDMode) ArtisticPrimary else Color.Transparent,
+                                    contentColor = if (isLocalHDMode) Color.White else MutedText
+                                ),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                Text("محلي (MediaPipe)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            Button(
+                                onClick = { viewModel.isLocalHDMode.value = false },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (!isLocalHDMode) ArtisticSecondary else Color.Transparent,
+                                    contentColor = if (!isLocalHDMode) Color.White else MutedText
+                                ),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                Text("سحابي (Imagen)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
                         // Informational row for HD photorealistic generation
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = ArtisticSecondary.copy(alpha = 0.12f),
-                            border = BorderStroke(1.dp, ArtisticSecondary.copy(alpha = 0.3f)),
+                            color = (if (isLocalHDMode) ArtisticPrimary else ArtisticSecondary).copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, (if (isLocalHDMode) ArtisticPrimary else ArtisticSecondary).copy(alpha = 0.3f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text("💡", fontSize = 16.sp)
+                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(if (isLocalHDMode) "🏠" else "☁️", fontSize = 16.sp)
+                                    Text(
+                                        text = if (isLocalHDMode) context.getString(R.string.local_hd_title) else context.getString(R.string.cloud_hd_title),
+                                        color = LightText,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                                 Text(
-                                    text = "التوليد الواقعي بدقة عالية يستخدم نموذج Imagen السحابي للحصول على صور فوتوغرافية ولوحات فنية مذهلة مباشرة من خوادم الذكاء الاصطناعي.",
+                                    text = if (isLocalHDMode) context.getString(R.string.local_hd_desc) else "التوليد الواقعي بدقة عالية يستخدم نموذج Imagen السحابي للحصول على صور فوتوغرافية ولوحات فنية مذهلة مباشرة من خوادم الذكاء الاصطناعي.",
                                     color = LightText,
                                     fontSize = 11.sp,
-                                    lineHeight = 16.sp,
-                                    modifier = Modifier.weight(1f)
+                                    lineHeight = 16.sp
                                 )
+                                if (isLocalHDMode) {
+                                    Text(
+                                        text = context.getString(R.string.local_hd_requirement),
+                                        color = ArtisticTertiary,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
