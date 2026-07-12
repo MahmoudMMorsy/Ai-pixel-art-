@@ -1,0 +1,192 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.example"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="26"
+9        android:targetSdkVersion="34" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/app/app/src/main/AndroidManifest.xml:4:5-67
+11-->/app/app/src/main/AndroidManifest.xml:4:22-64
+12
+13    <permission
+13-->[androidx.core:core:1.12.0] /home/jules/.gradle/caches/8.8/transforms/a1e3062d015e162420696c12d05673fb/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+14        android:name="com.example.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+14-->[androidx.core:core:1.12.0] /home/jules/.gradle/caches/8.8/transforms/a1e3062d015e162420696c12d05673fb/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+15        android:protectionLevel="signature" />
+15-->[androidx.core:core:1.12.0] /home/jules/.gradle/caches/8.8/transforms/a1e3062d015e162420696c12d05673fb/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+16
+17    <uses-permission android:name="com.example.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" /> <!-- Although the *SdkVersion is captured in gradle build files, this is required for non gradle builds -->
+17-->[androidx.core:core:1.12.0] /home/jules/.gradle/caches/8.8/transforms/a1e3062d015e162420696c12d05673fb/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+17-->[androidx.core:core:1.12.0] /home/jules/.gradle/caches/8.8/transforms/a1e3062d015e162420696c12d05673fb/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+18    <!-- <uses-sdk android:minSdkVersion="14"/> -->
+19    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+19-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:25:5-79
+19-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:25:22-76
+20
+21    <application
+21-->/app/app/src/main/AndroidManifest.xml:6:5-27:19
+22        android:allowBackup="true"
+22-->/app/app/src/main/AndroidManifest.xml:7:9-35
+23        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+23-->[androidx.core:core:1.12.0] /home/jules/.gradle/caches/8.8/transforms/a1e3062d015e162420696c12d05673fb/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
+24        android:debuggable="true"
+25        android:extractNativeLibs="false"
+26        android:hardwareAccelerated="true"
+26-->/app/app/src/main/AndroidManifest.xml:13:9-43
+27        android:icon="@android:mipmap/sym_def_app_icon"
+27-->/app/app/src/main/AndroidManifest.xml:8:9-56
+28        android:label="@string/app_name"
+28-->/app/app/src/main/AndroidManifest.xml:9:9-41
+29        android:roundIcon="@android:mipmap/sym_def_app_icon"
+29-->/app/app/src/main/AndroidManifest.xml:10:9-61
+30        android:supportsRtl="true"
+30-->/app/app/src/main/AndroidManifest.xml:11:9-35
+31        android:theme="@android:style/Theme.Material.NoActionBar" >
+31-->/app/app/src/main/AndroidManifest.xml:12:9-66
+32        <uses-native-library
+32-->/app/app/src/main/AndroidManifest.xml:14:9-85
+33            android:name="libOpenCL.so"
+33-->/app/app/src/main/AndroidManifest.xml:14:30-57
+34            android:required="false" />
+34-->/app/app/src/main/AndroidManifest.xml:14:58-82
+35        <uses-native-library
+35-->/app/app/src/main/AndroidManifest.xml:14:9-85
+36            android:name="libOpenCL-car.so"
+36-->/app/app/src/main/AndroidManifest.xml:14:30-57
+37            android:required="false" />
+37-->/app/app/src/main/AndroidManifest.xml:14:58-82
+38        <uses-native-library
+38-->/app/app/src/main/AndroidManifest.xml:14:9-85
+39            android:name="libOpenCL-pixel.so"
+39-->/app/app/src/main/AndroidManifest.xml:14:30-57
+40            android:required="false" />
+40-->/app/app/src/main/AndroidManifest.xml:14:58-82
+41
+42        <activity
+42-->/app/app/src/main/AndroidManifest.xml:18:9-26:20
+43            android:name="com.example.MainActivity"
+43-->/app/app/src/main/AndroidManifest.xml:19:13-41
+44            android:exported="true"
+44-->/app/app/src/main/AndroidManifest.xml:20:13-36
+45            android:theme="@android:style/Theme.Material.NoActionBar" >
+45-->/app/app/src/main/AndroidManifest.xml:21:13-70
+46            <intent-filter>
+46-->/app/app/src/main/AndroidManifest.xml:22:13-25:29
+47                <action android:name="android.intent.action.MAIN" />
+47-->/app/app/src/main/AndroidManifest.xml:23:17-69
+47-->/app/app/src/main/AndroidManifest.xml:23:25-66
+48
+49                <category android:name="android.intent.category.LAUNCHER" />
+49-->/app/app/src/main/AndroidManifest.xml:24:17-77
+49-->/app/app/src/main/AndroidManifest.xml:24:27-74
+50            </intent-filter>
+51        </activity>
+52        <activity
+52-->[androidx.compose.ui:ui-tooling-android:1.6.2] /home/jules/.gradle/caches/8.8/transforms/563c3280de3e236fbbdad63b67d1db24/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
+53            android:name="androidx.compose.ui.tooling.PreviewActivity"
+53-->[androidx.compose.ui:ui-tooling-android:1.6.2] /home/jules/.gradle/caches/8.8/transforms/563c3280de3e236fbbdad63b67d1db24/transformed/ui-tooling-release/AndroidManifest.xml:24:13-71
+54            android:exported="true" />
+54-->[androidx.compose.ui:ui-tooling-android:1.6.2] /home/jules/.gradle/caches/8.8/transforms/563c3280de3e236fbbdad63b67d1db24/transformed/ui-tooling-release/AndroidManifest.xml:25:13-36
+55
+56        <provider
+56-->[androidx.emoji2:emoji2:1.3.0] /home/jules/.gradle/caches/8.8/transforms/bee46d1005610d74ef45575e0a718ce5/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+57            android:name="androidx.startup.InitializationProvider"
+57-->[androidx.emoji2:emoji2:1.3.0] /home/jules/.gradle/caches/8.8/transforms/bee46d1005610d74ef45575e0a718ce5/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+58            android:authorities="com.example.androidx-startup"
+58-->[androidx.emoji2:emoji2:1.3.0] /home/jules/.gradle/caches/8.8/transforms/bee46d1005610d74ef45575e0a718ce5/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+59            android:exported="false" >
+59-->[androidx.emoji2:emoji2:1.3.0] /home/jules/.gradle/caches/8.8/transforms/bee46d1005610d74ef45575e0a718ce5/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+60            <meta-data
+60-->[androidx.emoji2:emoji2:1.3.0] /home/jules/.gradle/caches/8.8/transforms/bee46d1005610d74ef45575e0a718ce5/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+61                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+61-->[androidx.emoji2:emoji2:1.3.0] /home/jules/.gradle/caches/8.8/transforms/bee46d1005610d74ef45575e0a718ce5/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+62                android:value="androidx.startup" />
+62-->[androidx.emoji2:emoji2:1.3.0] /home/jules/.gradle/caches/8.8/transforms/bee46d1005610d74ef45575e0a718ce5/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+63            <meta-data
+63-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/jules/.gradle/caches/8.8/transforms/257e5c7e8e3c8c20be5f8fedea24c048/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:29:13-31:52
+64                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+64-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/jules/.gradle/caches/8.8/transforms/257e5c7e8e3c8c20be5f8fedea24c048/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:30:17-78
+65                android:value="androidx.startup" />
+65-->[androidx.lifecycle:lifecycle-process:2.7.0] /home/jules/.gradle/caches/8.8/transforms/257e5c7e8e3c8c20be5f8fedea24c048/transformed/lifecycle-process-2.7.0/AndroidManifest.xml:31:17-49
+66            <meta-data
+66-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+67                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+67-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+68                android:value="androidx.startup" />
+68-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+69        </provider>
+70
+71        <receiver
+71-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+72            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+72-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+73            android:directBootAware="false"
+73-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+74            android:enabled="true"
+74-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+75            android:exported="true"
+75-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+76            android:permission="android.permission.DUMP" >
+76-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+77            <intent-filter>
+77-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+78                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+78-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+78-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+79            </intent-filter>
+80            <intent-filter>
+80-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+81                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+81-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+81-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+82            </intent-filter>
+83            <intent-filter>
+83-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+84                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+84-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+84-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+85            </intent-filter>
+86            <intent-filter>
+86-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+87                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+87-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+87-->[androidx.profileinstaller:profileinstaller:1.3.0] /home/jules/.gradle/caches/8.8/transforms/414b27764ae28c68c831ecc4f0d624e1/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:25-92
+88            </intent-filter>
+89        </receiver>
+90
+91        <service
+91-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:29:9-35:19
+92            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+92-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:30:13-103
+93            android:exported="false" >
+93-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:31:13-37
+94            <meta-data
+94-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:32:13-34:39
+95                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+95-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:33:17-94
+96                android:value="cct" />
+96-->[com.google.android.datatransport:transport-backend-cct:3.1.0] /home/jules/.gradle/caches/8.8/transforms/76a8a4b752fc48c7a459dca14c482fdd/transformed/transport-backend-cct-3.1.0/AndroidManifest.xml:34:17-36
+97        </service>
+98        <service
+98-->[com.google.android.datatransport:transport-runtime:3.1.0] /home/jules/.gradle/caches/8.8/transforms/db192cd4c2b2d988441831d7c67fbbf8/transformed/transport-runtime-3.1.0/AndroidManifest.xml:26:9-30:19
+99            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+99-->[com.google.android.datatransport:transport-runtime:3.1.0] /home/jules/.gradle/caches/8.8/transforms/db192cd4c2b2d988441831d7c67fbbf8/transformed/transport-runtime-3.1.0/AndroidManifest.xml:27:13-117
+100            android:exported="false"
+100-->[com.google.android.datatransport:transport-runtime:3.1.0] /home/jules/.gradle/caches/8.8/transforms/db192cd4c2b2d988441831d7c67fbbf8/transformed/transport-runtime-3.1.0/AndroidManifest.xml:28:13-37
+101            android:permission="android.permission.BIND_JOB_SERVICE" >
+101-->[com.google.android.datatransport:transport-runtime:3.1.0] /home/jules/.gradle/caches/8.8/transforms/db192cd4c2b2d988441831d7c67fbbf8/transformed/transport-runtime-3.1.0/AndroidManifest.xml:29:13-69
+102        </service>
+103
+104        <receiver
+104-->[com.google.android.datatransport:transport-runtime:3.1.0] /home/jules/.gradle/caches/8.8/transforms/db192cd4c2b2d988441831d7c67fbbf8/transformed/transport-runtime-3.1.0/AndroidManifest.xml:32:9-34:40
+105            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+105-->[com.google.android.datatransport:transport-runtime:3.1.0] /home/jules/.gradle/caches/8.8/transforms/db192cd4c2b2d988441831d7c67fbbf8/transformed/transport-runtime-3.1.0/AndroidManifest.xml:33:13-132
+106            android:exported="false" />
+106-->[com.google.android.datatransport:transport-runtime:3.1.0] /home/jules/.gradle/caches/8.8/transforms/db192cd4c2b2d988441831d7c67fbbf8/transformed/transport-runtime-3.1.0/AndroidManifest.xml:34:13-37
+107    </application>
+108
+109</manifest>

@@ -1,8 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pixel Animator</string>
-    <string name="local_hd_title">مصفوفة المعالجة المحلية (On-Device AI)</string>
-    <string name="cloud_hd_title">محرك الانتشار السحابي (Cloud Diffusion)</string>
-    <string name="local_hd_desc">توليد احترافي فائق الدقة باستخدام وحدات المعالجة العصبية بالجهاز. يضمن هذا الوضع خصوصية البيانات الكاملة والعمل دون اتصال بالإنترنت.</string>
-    <string name="local_hd_requirement">يتطلب هذا الوضع تهيئة ملفات النماذج المفتوحة (SD/Flux) في مجلد البيانات الداخلي للتطبيق.</string>
+    <string name="app_name">بكسل لاب ✦ Pixel Animator</string>
+
+    <!-- Local HD Generation -->
+    <string name="local_hd_title">مصفوفة المعالجة العصبية المحلية (On-Device Neural Matrix)</string>
+    <string name="cloud_hd_title">محرك الانتشار السحابي الفائق (High-End Cloud Diffusion)</string>
+    <string name="local_hd_desc">توليد احترافي فائق الدقة يعتمد على تقنيات MediaPipe و Diffusion لتسريع المعالجة على وحدات GPU المحلية. يضمن هذا الوضع خصوصية بياناتك المطلقة والقدرة على العمل في بيئات معزولة تماماً عن الإنترنت.</string>
+    <string name="local_hd_requirement">تنبيه تقني: يتطلب هذا الوضع وجود ملفات الأوزان (Weights) لنماذج Stable Diffusion v1.5 أو Flux.1 داخل مسار النظام المحمي للتطبيق ليعمل المحرك المحلي بكفاءة.</string>
+
+    <!-- System Status -->
+    <string name="system_status_vulkan">محرك Vulkan: نشط</string>
+    <string name="system_status_opencl">تسريع OpenCL: مفعل</string>
+    <string name="model_center_title">مركز إدارة النماذج الذكية</string>
+
+    <!-- UI Labels -->
+    <string name="generate_hd">توليد صورة واقعية مذهلة ✦ Generate HD</string>
+    <string name="generate_retro">توليد بالذكاء الاصطناعي ✦ Generate Retro</string>
+    <string name="timeline_title">شريط السيناريو الزمني (Frames Timeline)</string>
+    <string name="history_title">مكتبة المحفوظات الذكية</string>
 </resources>

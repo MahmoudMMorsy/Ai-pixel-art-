@@ -1,0 +1,8 @@
+/app/app/src/main/java/com/example/ui/screens/PixelLabScreen.kt
+/app/app/src/main/java/com/example/ui/theme/Color.kt
+/app/app/src/main/java/com/example/ui/theme/Theme.kt
+/app/app/src/main/java/com/example/ui/viewmodel/PixelAnimatorViewModel.kt
+/app/app/src/main/java/com/example/engine/LocalPixelEngine.kt
+/app/app/src/main/java/com/example/MainActivity.kt
+/app/app/src/main/java/com/example/engine/GeminiPixelEngine.kt
+/app/app/src/main/java/com/example/engine/LocalHDImageEngine.kt
