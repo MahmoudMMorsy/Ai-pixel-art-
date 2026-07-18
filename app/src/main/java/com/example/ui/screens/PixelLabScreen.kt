@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import android.widget.Toast
+import com.example.R
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
