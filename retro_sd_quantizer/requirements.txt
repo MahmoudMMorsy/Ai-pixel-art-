@@ -1,0 +1,6 @@
+diffusers>=0.21.0
+transformers>=4.33.0
+accelerate>=0.22.0
+safetensors>=0.3.3
+huggingface_hub>=0.17.0
+numpy<2.0.0
