@@ -16,3 +16,6 @@ __pycache__/
 *.pth
 *.png
 app/retro_release.keystore
+
+# Allow committing our specific release APK
+!PixelAnimatorRetro.apk
