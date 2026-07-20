@@ -4,22 +4,30 @@ plugins {
 }
 
 android {
-    namespace = "com.example"
+    namespace = "com.retro.pixelanimator"
     compileSdk = 34
 
+    signingConfigs {
+        create("releaseSigning") {
+            storeFile = file("retro_release.keystore")
+            storePassword = "retro12345"
+            keyAlias = "retro_alias"
+            keyPassword = "retro12345"
+        }
+    }
+
     defaultConfig {
-        applicationId = "com.example"
+        applicationId = "com.retro.pixelanimator"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
 
-        // Configuration-level injection of the developer key
         val geminiKey = System.getenv("GEMINI_API_KEY") ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
     }
@@ -27,10 +35,14 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("releaseSigning")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("releaseSigning")
         }
     }
     compileOptions {
