@@ -1,4 +1,4 @@
-package com.example
+package com.retro.pixelanimator
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.example.ui.screens.PixelLabScreen
-import com.example.ui.theme.PixelAnimatorTheme
-import com.example.ui.viewmodel.PixelAnimatorViewModel
+import com.retro.pixelanimator.ui.screens.PixelLabScreen
+import com.retro.pixelanimator.ui.theme.PixelAnimatorTheme
+import com.retro.pixelanimator.ui.viewmodel.PixelAnimatorViewModel
 
 class MainActivity : ComponentActivity() {
     private val viewModel: PixelAnimatorViewModel by viewModels()

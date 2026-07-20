@@ -1,4 +1,4 @@
-package com.example.engine
+package com.retro.pixelanimator.engine
 
 import android.util.Log
 import kotlin.math.cos

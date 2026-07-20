@@ -1,8 +1,8 @@
-package com.example.ui.screens
+package com.retro.pixelanimator.ui.screens
 
 import android.net.Uri
 import android.widget.Toast
-import com.example.R
+import com.retro.pixelanimator.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -31,10 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.engine.PixelArtAnimationResponse
-import com.example.ui.theme.*
-import com.example.ui.viewmodel.PixelAnimatorViewModel
-import com.example.ui.viewmodel.UiState
+import com.retro.pixelanimator.engine.PixelArtAnimationResponse
+import com.retro.pixelanimator.ui.theme.*
+import com.retro.pixelanimator.ui.viewmodel.PixelAnimatorViewModel
+import com.retro.pixelanimator.ui.viewmodel.UiState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -47,7 +47,7 @@ fun PixelLabScreen(
     val frameCountState by viewModel.frameCount.collectAsState()
     val paletteHintState by viewModel.paletteHint.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
-    
+
     val currentFrameIndex by viewModel.currentFrameIndex.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val playbackSpeedMs by viewModel.playbackSpeedMs.collectAsState()
@@ -171,7 +171,7 @@ fun PixelLabScreen(
                                 )
                             }
                         }
-                        
+
                         Text(
                             text = "بكسل ريترو ✦ RETRO LAB",
                             fontSize = 16.sp,

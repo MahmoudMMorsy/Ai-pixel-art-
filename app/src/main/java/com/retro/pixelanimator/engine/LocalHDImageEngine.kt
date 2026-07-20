@@ -1,4 +1,4 @@
-package com.example.engine
+package com.retro.pixelanimator.engine
 
 import android.content.Context
 import android.graphics.Bitmap

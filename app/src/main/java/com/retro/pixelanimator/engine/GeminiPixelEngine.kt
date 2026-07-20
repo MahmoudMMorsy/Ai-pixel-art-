@@ -1,7 +1,7 @@
-package com.example.engine
+package com.retro.pixelanimator.engine
 
 import android.util.Log
-import com.example.BuildConfig
+import com.retro.pixelanimator.BuildConfig
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import okhttp3.OkHttpClient

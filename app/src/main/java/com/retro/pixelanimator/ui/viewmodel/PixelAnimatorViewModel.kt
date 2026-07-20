@@ -1,4 +1,4 @@
-package com.example.ui.viewmodel
+package com.retro.pixelanimator.ui.viewmodel
 
 import android.app.Application
 import android.graphics.Bitmap
@@ -7,10 +7,10 @@ import android.provider.OpenableColumns
 import android.util.Base64
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.engine.GeminiPixelEngine
-import com.example.engine.LocalHDImageEngine
-import com.example.engine.LocalPixelEngine
-import com.example.engine.PixelArtAnimationResponse
+import com.retro.pixelanimator.engine.GeminiPixelEngine
+import com.retro.pixelanimator.engine.LocalHDImageEngine
+import com.retro.pixelanimator.engine.LocalPixelEngine
+import com.retro.pixelanimator.engine.PixelArtAnimationResponse
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
