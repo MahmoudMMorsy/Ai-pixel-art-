@@ -1,14 +1,15 @@
 package com.example.ui.screens
 
+import android.net.Uri
 import android.widget.Toast
 import com.example.R
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -59,28 +62,45 @@ fun PixelLabScreen(
     val selectedHDModel by viewModel.selectedHDModel.collectAsState()
     val realImageBase64 by viewModel.realImageBase64.collectAsState()
 
+    // Sideload model states
+    val isModelImported by viewModel.isModelImported.collectAsState()
+    val importedModelName by viewModel.importedModelName.collectAsState()
+    val importedModelSize by viewModel.importedModelSize.collectAsState()
+    val isImporting by viewModel.isImporting.collectAsState()
+    val importError by viewModel.importError.collectAsState()
+
     var showGridLines by remember { mutableStateOf(true) }
-    var showAdvancedSettings by remember { mutableStateOf(false) }
 
-    // Set up standard creative recipes for pixel art prompting
-    val promptRecipes = listOf(
-        Pair("🔥 مكعب ناري متفجر", "مكعب ناري متفجر يتلاشى تدريجيا من السطوع إلى الرماد"),
-        Pair("🚀 سفينة فضاء عملاقة", "سفينة فضاء بكسل تدور محركاتها وتطلق طاقة ليزر متحركة"),
-        Pair("🪙 عملة ذهبية دوارة", "عملة ذهبية للألعاب تدور حول نفسها في دورة متكاملة"),
-        Pair("👻 شبح بكسل كلاسيكي", "شبح صغير يطير للأعلى والأسفل ويحرك ذيله الصغير"),
-        Pair("💧 قطرة ماء متساقطة", "قطرة ماء زرقاء تسقط ثم تصطدم بالأرض وتنتشر كالبقع")
+    // Glow Animation for Retro feel
+    val infiniteTransition = rememberInfiniteTransition(label = "retro_glow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow"
     )
 
-    // Set up standard creative recipes for real image generation prompting
-    val hdRecipes = listOf(
-        Pair("🌌 ثقب أسود كوني", "صورة فوتوغرافية مذهلة لثقب أسود يلتهم مجرة حلزونية، ألوان نيون ساطعة، دقة عالية سينمائية"),
-        Pair("🦁 أسد محارب مهيب", "بورتريه مهيب لملك غابة محارب يرتدي درعاً ذهبياً أسطورياً بالكامل، نمط فانتازيا ملحمي"),
-        Pair("🌸 قلعة يابانية", "مبنى قلعة يابانية تقليدية تحوطها أشجار أزهار الكرز، بيئة هادئة ودافئة مع جودة سينمائية"),
-        Pair("🏎️ سيارة مستقبلية", "سيارة سباق رياضية كهربائية متطورة تسير في شوارع طوكيو الممطرة ليلاً تحت ناطحات السحاب المضيئة بالنيون"),
-        Pair("🧙 ساحر حكيم", "ساحر أسطوري يقرأ كتاب تعاويذ سحرية متوهجة تطفو في الهواء، جودة ثلاثية الأبعاد خيالية")
+    // Activity Result Launcher for importing `.gguf` file
+    val modelPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.importGgufModel(uri)
+        }
+    }
+
+    // Standard Bilingual Retro Gaming Presets
+    val bilingualRetroRecipes = listOf(
+        Pair("🎮 ماريو بكسل", "mario sprite, retro nes plumber hero character, game boy style"),
+        Pair("🗡️ بطل فاميكوم", "retro pixel knight hero with a shiny gold sword, nes style"),
+        Pair("👾 وحش كلاسيكي", "retro alien monster sprite, glowing eyes, gameboy classic"),
+        Pair("🪙 عملة ذهبية", "retro gold coin sprite, shiny nes gold, arcade item"),
+        Pair("🏰 قلعة ريترو", "nes castle brick tower with flag, game boy retro background")
     )
 
-    // Helper functions for parsing color strings safely
     fun getColorForChar(char: Char, palette: List<String>): Color {
         val index = try {
             char.toString().toInt(16)
@@ -98,18 +118,25 @@ fun PixelLabScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(Color(0xFF0C0C14)) // Pitch dark arcade background
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // --- 1. Premium Header (Arabic Workstation Style) ---
+        // --- 1. Retro CRT Arcade Header ---
         item {
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, ArtisticPrimary.copy(alpha = 0.2f))
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp,
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFFF007F), Color(0xFF00F0FF))
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -122,8 +149,8 @@ fun PixelLabScreen(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = Color(0xFF10B981).copy(alpha = 0.15f),
-                            border = BorderStroke(1.dp, Color(0xFF10B981))
+                            color = if (isModelImported) Color(0xFF00FFCC).copy(alpha = 0.15f) else Color(0xFFFF007F).copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF007F))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -134,38 +161,38 @@ fun PixelLabScreen(
                                     modifier = Modifier
                                         .size(8.dp)
                                         .clip(RoundedCornerShape(50))
-                                        .background(Color(0xFF10B981))
+                                        .background(if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF007F))
                                 )
                                 Text(
-                                    text = "Vulkan Connection Active",
-                                    color = Color(0xFF10B981),
-                                    fontSize = 11.sp,
+                                    text = if (isModelImported) "GGUF MODEL LOADED" else "NO MODEL IMPORTED",
+                                    color = if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF007F),
+                                    fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
                         
                         Text(
-                            text = "بكسل لاب ✦ Pixel Lab",
-                            fontSize = 18.sp,
+                            text = "بكسل ريترو ✦ RETRO LAB",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Black,
-                            color = ArtisticPrimary
+                            color = Color(0xFFFF007F)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "محطة توليد وتحريك فن البكسل الذكية",
-                        fontSize = 16.sp,
+                        text = "محاكي وألعاب الطيبين ✦ NES Game Boy Studio",
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = LightText,
+                        color = Color.White,
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "اكتب مرادك وسيقوم الذكاء الاصطناعي ببناء إطارات الحركة المتناسقة فوراً",
-                        fontSize = 12.sp,
-                        color = MutedText,
+                        text = "اكتب باللغة العربية أو الإنجليزية لتوليد بكسل آرت حقيقي وجبار",
+                        fontSize = 11.sp,
+                        color = Color(0xFF8A8A9E),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -173,392 +200,375 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 2. Interactive Main Studio Display ---
+        // --- 2. Model Center (مركز النماذج) for Import & Status Info ---
         item {
-            val currentAnimation = (uiState as? UiState.Success)?.data
-            val palette = currentAnimation?.palette ?: listOf("#1e1b4b", "#f97316", "#facc15", "#ef4444", "#3b82f6", "#ffffff")
-            val frames = currentAnimation?.frames ?: listOf("0".repeat(256))
-            val activeFrameIndex = currentFrameIndex.coerceIn(0, frames.size - 1)
-            val frameString = frames.getOrNull(activeFrameIndex) ?: "0".repeat(256)
-
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, ArtisticSecondary.copy(alpha = 0.2f))
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 1.5.dp,
+                        color = if (isModelImported) Color(0xFF00FFCC).copy(alpha = 0.6f) else Color(0xFFFF3366).copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (isRealImageState) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF3366)
+                        )
                         Text(
-                            text = "منصة توليد الصور الواقعية ✦ AI HD Studio",
-                            color = ArtisticSecondary,
-                            fontSize = 16.sp,
+                            text = "مركز إدارة النماذج المحلية ✦ MODEL CENTER",
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
+                            color = Color.White
                         )
-                        Text(
-                            text = if (uiState is UiState.Error) "فشل التوليد. يرجى مراجعة تفاصيل الخطأ بالأسفل." else "توليد صور واقعية ثلاثية الأبعاد بدقة فائقة باستخدام نموذج الذكاء الاصطناعي",
-                            color = MutedText,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp)
-                        )
+                    }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Divider(color = Color(0xFF24243C))
 
-                        // --- The Real HD Image Canvas ---
-                        Box(
-                            modifier = Modifier
-                                .size(240.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.Black)
-                                .border(2.dp, ArtisticSecondary.copy(alpha = 0.4f), RoundedCornerShape(12.dp)),
-                            contentAlignment = Alignment.Center
+                    if (isImporting) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            if (uiState is UiState.Loading) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    CircularProgressIndicator(color = ArtisticSecondary, modifier = Modifier.size(32.dp))
-                                    Text(
-                                        text = "جاري الاتصال بنموذج التوليد...",
-                                        color = Color.White.copy(alpha = 0.8f),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            } else if (uiState is UiState.RealImageSuccess) {
-                                val base64Data = (uiState as UiState.RealImageSuccess).base64Data
-                                Base64Image(
-                                    base64Str = base64Data,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AddCircle,
-                                        contentDescription = null,
-                                        tint = MutedText,
-                                        modifier = Modifier.size(48.dp)
-                                    )
-                                    Text(
-                                        text = "الاستوديو جاهز للبناء الفني",
-                                        color = LightText,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "اكتب مرادك بالأسفل ثم اضغط زر التوليد السحابي الملون بمحرك Imagen",
-                                        color = MutedText,
-                                        fontSize = 11.sp,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = currentAnimation?.title ?: "إطار العمل البدئي",
-                            color = ArtisticSecondary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = currentAnimation?.description ?: "لم يتم توليد أي رسوم متحركة مخصصة بعد. استخدم لوحة التحكم بالأسفل للتوليد.",
-                            color = MutedText,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(vertical = 4.dp, horizontal = 12.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // --- The 16x16 Pixel Canvas Block ---
-                        Box(
-                            modifier = Modifier
-                                .size(240.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.Black)
-                                .border(2.dp, ArtisticPrimary.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                                .testTag("pixel_canvas")
-                        ) {
-                            Canvas(modifier = Modifier.fillMaxSize()) {
-                                val cellSize = size.width / 16f
-                                for (row in 0 until 16) {
-                                    for (col in 0 until 16) {
-                                        val charIdx = row * 16 + col
-                                        val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
-                                        val cellColor = getColorForChar(char, palette)
-
-                                        drawRect(
-                                            color = cellColor,
-                                            topLeft = androidx.compose.ui.geometry.Offset(col * cellSize, row * cellSize),
-                                            size = androidx.compose.ui.geometry.Size(cellSize + 0.5f, cellSize + 0.5f) // overlapping prevents minor rendering lines
-                                        )
-                                    }
-                                }
-
-                                // Subtle retro grid lines
-                                if (showGridLines) {
-                                    for (i in 1 until 16) {
-                                        val offset = i * cellSize
-                                        drawLine(
-                                            color = Color.White.copy(alpha = 0.12f),
-                                            start = androidx.compose.ui.geometry.Offset(offset, 0f),
-                                            end = androidx.compose.ui.geometry.Offset(offset, size.height),
-                                            strokeWidth = 1f
-                                        )
-                                        drawLine(
-                                            color = Color.White.copy(alpha = 0.12f),
-                                            start = androidx.compose.ui.geometry.Offset(0f, offset),
-                                            end = androidx.compose.ui.geometry.Offset(size.width, offset),
-                                            strokeWidth = 1f
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // --- Advanced Settings & Model Center ---
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showAdvancedSettings = !showAdvancedSettings }
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                            CircularProgressIndicator(color = Color(0xFF00F0FF), modifier = Modifier.size(28.dp))
                             Text(
-                                text = if (showAdvancedSettings) "إخفاء الخيارات المتقدمة" else "عرض الخيارات المتقدمة ⚙️",
-                                color = ArtisticTertiary,
+                                text = "جاري استيراد وتهيئة ملف الـ GGUF محلياً... يرجى الانتظار",
+                                color = Color(0xFF00F0FF),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Icon(
-                                imageVector = if (showAdvancedSettings) Icons.Default.KeyboardArrowUp else Icons.Default.Settings,
-                                contentDescription = null,
-                                tint = ArtisticTertiary,
-                                modifier = Modifier.size(16.dp).padding(start = 4.dp)
-                            )
                         }
-
-                        AnimatedVisibility(visible = showAdvancedSettings) {
+                    } else {
+                        if (isModelImported) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(DarkCard.copy(alpha = 0.5f))
-                                    .padding(12.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Text(
-                                    text = "مركز النماذج والتحكم الدقيق",
-                                    color = LightText,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                                // Placeholder for iteration slider and seed control
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("دقة المعالجة (Iterations):", color = MutedText, fontSize = 10.sp, modifier = Modifier.weight(1f))
-                                    Text("قيمة محسنة", color = ArtisticPrimary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("اسم النموذج:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                    Text(importedModelName ?: "غير معروف", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("حجم الملف:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                    Text(importedModelSize ?: "0 MB", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("حالة التشغيل:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                    Text("جاهز ومكتمل (Offline Ready)", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("الحالة:", color = MutedText, fontSize = 10.sp, modifier = Modifier.weight(1f))
-                                    Surface(
-                                        color = Color(0xFF10B981).copy(alpha = 0.1f),
-                                        shape = RoundedCornerShape(4.dp),
-                                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
-                                    ) {
-                                        Text("جاهز للاستخدام", color = Color(0xFF10B981), fontSize = 9.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
-                                    }
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Button(
+                                    onClick = { viewModel.deleteImportedModel() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3366)),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("حذف النموذج المستورد وتحرير المساحة", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "التطبيق خفيف وحر! لم يتم تجميع أي نموذج ضخم بداخله. يرجى استيراد أي نموذج GGUF خاص بك لتفعيل التوليد الذكي بالكامل محلياً بدون إنترنت.",
+                                    color = Color(0xFFFFD700),
+                                    fontSize = 11.sp,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Button(
+                                    onClick = { modelPickerLauncher.launch("*/*") },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FFCC)),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("استيراد نموذج GGUF من جهازك", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
                     }
 
-                    if (!isRealImageState) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                    importError?.let { err ->
+                        Text(
+                            text = err,
+                            color = Color(0xFFFF3366),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
 
-                        // Canvas Utility Toggles
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (showGridLines) Icons.Default.Check else Icons.Default.Close,
-                                    contentDescription = null,
-                                    tint = MutedText,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = if (showGridLines) "شبكة الرسم مفعّلة" else "الشبكة مخفية",
-                                    color = MutedText,
-                                    fontSize = 11.sp
-                                )
-                                Switch(
-                                    checked = showGridLines,
-                                    onCheckedChange = { showGridLines = it },
-                                    modifier = Modifier.scale(0.7f)
-                                )
-                            }
+        // --- 3. CRT Screen & Pixel Canvas ---
+        item {
+            val currentAnimation = (uiState as? UiState.Success)?.data
+            val palette = currentAnimation?.palette ?: listOf("#0B0F19", "#4F46E5", "#06B6D4", "#F43F5E", "#EC4899", "#FFFFFF")
+            val frames = currentAnimation?.frames ?: listOf("0".repeat(256))
+            val activeFrameIndex = currentFrameIndex.coerceIn(0, frames.size - 1)
+            val frameString = frames.getOrNull(activeFrameIndex) ?: "0".repeat(256)
 
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = DarkCard,
-                            ) {
-                                Text(
-                                    text = "الفريم: ${activeFrameIndex + 1} / ${frames.size}",
-                                    color = LightText,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFF00F0FF).copy(alpha = glowAlpha),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF10101C)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "شاشة التوليد الكلاسيكية ✦ CRT MONITOR",
+                        color = Color(0xFF00F0FF),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
 
-                        if (isLocalHDMode) {
-                            Text(
-                                text = "اختر النموذج المفتوح المستهدف:",
-                                color = ArtisticTertiary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                listOf(
-                                    Pair(com.example.engine.LocalHDImageEngine.ModelArchitecture.STABLE_DIFFUSION_V1_5, "Stable Diffusion v1.5"),
-                                    Pair(com.example.engine.LocalHDImageEngine.ModelArchitecture.FLUX_1_SCHNELL, "Flux.1 Schnell")
-                                ).forEach { (arch, label) ->
-                                    val isSelected = selectedHDModel == arch
-                                    Surface(
-                                        modifier = Modifier.clickable { viewModel.selectedHDModel.value = arch },
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = if (isSelected) ArtisticPrimary.copy(alpha = 0.2f) else DarkCard,
-                                        border = BorderStroke(
-                                            width = 1.dp,
-                                            color = if (isSelected) ArtisticPrimary else Color.White.copy(alpha = 0.05f)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = label,
-                                            color = if (isSelected) Color.White else LightText,
-                                            fontSize = 11.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    // --- The 16x16 Pixel Canvas Block with scanline overlays ---
+                    Box(
+                        modifier = Modifier
+                            .size(240.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.Black)
+                            .border(3.dp, Color(0xFF00F0FF), RoundedCornerShape(12.dp))
+                            .drawWithContent {
+                                drawContent()
+                                // Simulate CRT Retro Scanlines Overlay
+                                val scanlineHeight = 4f
+                                val numLines = (size.height / scanlineHeight).toInt()
+                                for (i in 0 until numLines) {
+                                    if (i % 2 == 0) {
+                                        drawLine(
+                                            color = Color.Black.copy(alpha = 0.15f),
+                                            start = Offset(0f, i * scanlineHeight),
+                                            end = Offset(size.width, i * scanlineHeight),
+                                            strokeWidth = 2f
                                         )
                                     }
                                 }
                             }
-                        }
+                            .testTag("pixel_canvas")
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val cellSize = size.width / 16f
+                            for (row in 0 until 16) {
+                                for (col in 0 until 16) {
+                                    val charIdx = row * 16 + col
+                                    val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
+                                    val cellColor = getColorForChar(char, palette)
 
-                        HorizontalDivider(
-                            color = Color.White.copy(alpha = 0.08f),
-                            modifier = Modifier.padding(vertical = 12.dp)
-                        )
-
-                        // --- Cinematic Playback Console Row ---
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    viewModel.stopAnimationPlayback()
-                                    val prev = if (activeFrameIndex == 0) frames.size - 1 else activeFrameIndex - 1
-                                    viewModel.setCurrentFrameIndex(prev)
-                                },
-                                modifier = Modifier.testTag("prev_frame_button")
-                            ) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "السابق", tint = LightText)
+                                    drawRect(
+                                        color = cellColor,
+                                        topLeft = Offset(col * cellSize, row * cellSize),
+                                        size = androidx.compose.ui.geometry.Size(cellSize + 0.5f, cellSize + 0.5f)
+                                    )
+                                }
                             }
 
-                            IconButton(
-                                onClick = { viewModel.togglePlayback() },
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(50))
-                                    .background(ArtisticPrimary)
-                                    .testTag("play_pause_button")
-                            ) {
-                                Text(
-                                    text = if (isPlaying) "❚❚" else "▶",
-                                    color = Color.White,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(start = if (isPlaying) 0.dp else 4.dp)
-                                )
-                            }
-
-                            IconButton(
-                                onClick = {
-                                    viewModel.stopAnimationPlayback()
-                                    val next = (activeFrameIndex + 1) % frames.size
-                                    viewModel.setCurrentFrameIndex(next)
-                                },
-                                modifier = Modifier.testTag("next_frame_button")
-                            ) {
-                                Icon(Icons.Default.ArrowForward, contentDescription = "التالي", tint = LightText)
+                            // Subtle retro grid lines
+                            if (showGridLines) {
+                                for (i in 1 until 16) {
+                                    val offset = i * cellSize
+                                    drawLine(
+                                        color = Color.White.copy(alpha = 0.08f),
+                                        start = Offset(offset, 0f),
+                                        end = Offset(offset, size.height),
+                                        strokeWidth = 1f
+                                    )
+                                    drawLine(
+                                        color = Color.White.copy(alpha = 0.08f),
+                                        start = Offset(0f, offset),
+                                        end = Offset(size.width, offset),
+                                        strokeWidth = 1f
+                                    )
+                                }
                             }
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                        // Speed Controllers
+                    // CRT Status and toggle network
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "سرعة التحريك:",
-                                color = LightText,
+                                text = "شبكة الرسم مفعّلة",
+                                color = Color(0xFF8A8A9E),
+                                fontSize = 11.sp
+                            )
+                            Switch(
+                                checked = showGridLines,
+                                onCheckedChange = { showGridLines = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color(0xFF00F0FF),
+                                    checkedTrackColor = Color(0xFF00F0FF).copy(alpha = 0.3f)
+                                )
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFF1B1B30),
+                        ) {
+                            Text(
+                                text = "فريم: ${activeFrameIndex + 1} / ${frames.size}",
+                                color = Color.White,
                                 fontSize = 11.sp,
-                                modifier = Modifier.weight(1f)
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // --- 4. NES Console Controller (D-Pad & Buttons) ---
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Color(0xFFFF007F).copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "جهاز التحكم ✦ FAMICOM CONTROLLER",
+                        color = Color(0xFFFF007F),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Classic D-Pad Style Controls (Left/Right)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    viewModel.stopAnimationPlayback()
+                                    viewModel.setCurrentFrameIndex((currentFrameIndex - 1).coerceAtLeast(0))
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier.size(44.dp),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "السابق", tint = Color.White)
+                            }
+
+                            Text(
+                                text = "D-PAD",
+                                color = Color(0xFF8A8A9E),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
                             )
 
-                            listOf(
-                                Triple("سريع", 150L, Color(0xFF10B981)),
-                                Triple("متوسط", 250L, ArtisticPrimary),
-                                Triple("بطيء", 450L, ArtisticSecondary)
-                            ).forEach { (label, speed, activeCol) ->
-                                val isSelected = playbackSpeedMs == speed
+                            Button(
+                                onClick = {
+                                    viewModel.stopAnimationPlayback()
+                                    viewModel.setCurrentFrameIndex(currentFrameIndex + 1)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier.size(44.dp),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(Icons.Default.ArrowForward, contentDescription = "التالي", tint = Color.White)
+                            }
+                        }
+
+                        // Play/Pause Action Buttons
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Button(
-                                    onClick = { viewModel.updatePlaybackSpeed(speed) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (isSelected) activeCol else DarkCard,
-                                        contentColor = if (isSelected) Color.White else MutedText
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    modifier = Modifier.height(28.dp)
+                                    onClick = { viewModel.togglePlayback() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF007F)),
+                                    modifier = Modifier.size(48.dp),
+                                    shape = RoundedCornerShape(50)
                                 ) {
-                                    Text(label, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = if (isPlaying) "❚❚" else "▶",
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Black
+                                    )
                                 }
+                                Text("A-START", color = Color(0xFFFF007F), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                            }
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Button(
+                                    onClick = { viewModel.stopAnimationPlayback() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00F0FF)),
+                                    modifier = Modifier.size(48.dp),
+                                    shape = RoundedCornerShape(50)
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "توقف", tint = Color.Black)
+                                }
+                                Text("B-STOP", color = Color(0xFF00F0FF), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
                             }
                         }
                     }
@@ -566,283 +576,23 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 3. Prompt Configuration & Control Box ---
+        // --- 5. Inputs & Bilingual Prompts config ---
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, ArtisticPrimary.copy(alpha = 0.2f))
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "محرك صياغة الأفكار ✦ Simulation Studio",
-                        color = ArtisticPrimary,
-                        fontSize = 14.sp,
+                        text = "لوحة التوجيه الثنائية ✦ LANGUAGE CENTER",
+                        color = Color(0xFF00F0FF),
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
-
-                    // Mode Selection Tab (Pixel retro vs HD photorealistic image generation)
-                    Text(
-                        text = "اختر نمط التوليد والإنتاج الفني:",
-                        color = ArtisticSecondary,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(DarkCard)
-                            .padding(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Button(
-                            onClick = { 
-                                viewModel.isRealImageMode.value = false
-                                viewModel.isCloudEnabled.value = false
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (!isRealImageState) ArtisticPrimary else Color.Transparent,
-                                contentColor = if (!isRealImageState) Color.White else MutedText
-                             ),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
-                            Text("محاكي فن البكسل (Pixel Art)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        Button(
-                            onClick = { 
-                                viewModel.isRealImageMode.value = true
-                                viewModel.isCloudEnabled.value = true
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isRealImageState) ArtisticSecondary else Color.Transparent,
-                                contentColor = if (isRealImageState) Color.White else MutedText
-                            ),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
-                            Text("توليد صور واقعية (HD Art)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-
-                    if (!isRealImageState) {
-                        // NEW: operational mode switcher
-                        Text(
-                            text = "طريقة التشغيل والموديل المستهدف:",
-                            color = MutedText,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(DarkCard)
-                                .padding(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Button(
-                                onClick = { viewModel.isCloudEnabled.value = false },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (!isCloudEnabledState) ArtisticPrimary else Color.Transparent,
-                                    contentColor = if (!isCloudEnabledState) Color.White else MutedText
-                                ),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(RoundedCornerShape(50))
-                                            .background(if (!isCloudEnabledState) Color.White else Color.Gray)
-                                    )
-                                    Text("محلي بالكامل (بدون نت)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-
-                            Button(
-                                onClick = { viewModel.isCloudEnabled.value = true },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isCloudEnabledState) ArtisticSecondary else Color.Transparent,
-                                    contentColor = if (isCloudEnabledState) Color.White else MutedText
-                                ),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(RoundedCornerShape(50))
-                                            .background(if (isCloudEnabledState) Color.White else Color.Gray)
-                                    )
-                                    Text("سحابي Gemini API", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-
-                        // Show local models chips selector if Cloud is disabled (as default)
-                        if (!isCloudEnabledState) {
-                            Text(
-                                text = "اختر أحد نماذج التوليد المحلية ومفتوحة المصدر:",
-                                color = ArtisticTertiary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                localModelsList.forEach { model ->
-                                    val isSelected = selectedLocalModelState == model
-                                    val (modelTitle, modelIcon, defaultPrompt) = when (model) {
-                                        com.example.engine.LocalPixelEngine.MODEL_DIFFUSION -> Triple("نموذج انتشار البكسل LPD", "⚛️", "بطل بكسل خارق يحمل سيفاً مضيئاً يلمع")
-                                        com.example.engine.LocalPixelEngine.MODEL_NEURAL_CPPN -> Triple("الشبكة العصبية CPPN", "🧠", "بنية عصبية عميقة")
-                                        com.example.engine.LocalPixelEngine.MODEL_FIRE -> Triple("لهب ناري", "🔥", "طاقة لهب نارية جبارة")
-                                        com.example.engine.LocalPixelEngine.MODEL_FLUID -> Triple("مياه وسوائل", "💧", "قطرة ماء تسقط وتصطدم")
-                                        com.example.engine.LocalPixelEngine.MODEL_SPIN3D -> Triple("دوران ثلاثي الأبعاد", "🪙", "عملة ذهبية تدور حول محورها")
-                                        com.example.engine.LocalPixelEngine.MODEL_CELLULAR -> Triple("نمو خلوي", "🧬", "نمو نسيج خلوي ذكي")
-                                        com.example.engine.LocalPixelEngine.MODEL_PLASMA -> Triple("موجات البلازما", "⚡", "أمواج ومجال بلازما طاقة")
-                                        com.example.engine.LocalPixelEngine.MODEL_GRAVITY -> Triple("جاذبية كوكبية", "🌌", "دوران فلكي في حقل مغناطيسي")
-                                        com.example.engine.LocalPixelEngine.MODEL_WALKER -> Triple("كائن مشي حركي", "🚶", "شخصية تسير بحركة كينماتيكية")
-                                        else -> Triple("مجهول", "🌀", "")
-                                    }
-
-                                    Surface(
-                                        modifier = Modifier.clickable {
-                                            viewModel.selectedLocalModel.value = model
-                                            viewModel.prompt.value = defaultPrompt
-                                        },
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = if (isSelected) ArtisticPrimary.copy(alpha = 0.2f) else DarkCard,
-                                        border = BorderStroke(
-                                            width = 1.dp,
-                                            color = if (isSelected) ArtisticPrimary else Color.White.copy(alpha = 0.05f)
-                                        )
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Text(text = modelIcon, fontSize = 11.sp)
-                                            Text(
-                                                text = modelTitle,
-                                                color = if (isSelected) Color.White else LightText,
-                                                fontSize = 11.sp,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        // Operational mode switcher for HD Art
-                        Text(
-                            text = "طريقة التشغيل والموديل المستهدف:",
-                            color = MutedText,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(DarkCard)
-                                .padding(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Button(
-                                onClick = { viewModel.isLocalHDMode.value = true },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isLocalHDMode) ArtisticPrimary else Color.Transparent,
-                                    contentColor = if (isLocalHDMode) Color.White else MutedText
-                                ),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                Text("محلي (MediaPipe)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-
-                            Button(
-                                onClick = { viewModel.isLocalHDMode.value = false },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (!isLocalHDMode) ArtisticSecondary else Color.Transparent,
-                                    contentColor = if (!isLocalHDMode) Color.White else MutedText
-                                ),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                Text("سحابي (Imagen)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        // Informational row for HD photorealistic generation
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = (if (isLocalHDMode) ArtisticPrimary else ArtisticSecondary).copy(alpha = 0.12f),
-                            border = BorderStroke(1.dp, (if (isLocalHDMode) ArtisticPrimary else ArtisticSecondary).copy(alpha = 0.3f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(if (isLocalHDMode) "🏠" else "☁️", fontSize = 16.sp)
-                                    Text(
-                                        text = if (isLocalHDMode) context.getString(R.string.local_hd_title) else context.getString(R.string.cloud_hd_title),
-                                        color = LightText,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Text(
-                                    text = if (isLocalHDMode) context.getString(R.string.local_hd_desc) else "التوليد الواقعي بدقة عالية يستخدم نموذج Imagen السحابي للحصول على صور فوتوغرافية ولوحات فنية مذهلة مباشرة من خوادم الذكاء الاصطناعي.",
-                                    color = LightText,
-                                    fontSize = 11.sp,
-                                    lineHeight = 16.sp
-                                )
-                                if (isLocalHDMode) {
-                                    Text(
-                                        text = context.getString(R.string.local_hd_requirement),
-                                        color = ArtisticTertiary,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
-                    }
 
                     OutlinedTextField(
                         value = promptState,
@@ -850,86 +600,44 @@ fun PixelLabScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("prompt_input_field"),
-                        label = { Text(if (isRealImageState) "يرجى كتابة وصف الصورة الواقعية بالتفصيل" else "عن ماذا يعبر الرسم المتحرك؟", color = MutedText) },
+                        label = { Text("اكتب وصف اللعبة باللغة العربية أو الإنجليزية", color = Color(0xFF8A8A9E)) },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = ArtisticPrimary,
-                            unfocusedBorderColor = DarkCard,
-                            focusedTextColor = LightText,
-                            unfocusedTextColor = LightText
+                            focusedBorderColor = Color(0xFF00F0FF),
+                            unfocusedBorderColor = Color(0xFF24243C),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
                         ),
                         shape = RoundedCornerShape(10.dp)
                     )
 
-                    if (!isRealImageState) {
-                        OutlinedTextField(
-                            value = paletteHintState,
-                            onValueChange = { viewModel.paletteHint.value = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("المخطط اللوني المفضل (اختياري)", color = MutedText) },
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ArtisticPrimary,
-                                unfocusedBorderColor = DarkCard,
-                                focusedTextColor = LightText,
-                                unfocusedTextColor = LightText
-                            ),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-
-                        // Frame length slider control
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                text = "عدد الإطارات: $frameCountState",
-                                color = LightText,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.width(100.dp)
-                            )
-                            Slider(
-                                value = frameCountState.toFloat(),
-                                onValueChange = { viewModel.frameCount.value = it.toInt() },
-                                valueRange = 4f..8f,
-                                steps = 3,
-                                modifier = Modifier.weight(1f),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = ArtisticPrimary,
-                                    activeTrackColor = ArtisticPrimary,
-                                    inactiveTrackColor = DarkCard
-                                )
-                            )
-                        }
-                    }
-
-                    // --- Prompt Templates/Recipes Gallery ---
+                    // Presets
                     Text(
-                        text = "أفكار ووصفات جاهزة للتجربة:",
-                        color = MutedText,
+                        text = "عناصر مجهزة سريعة ✦ QUICK PRESETS:",
+                        color = Color(0xFF8A8A9E),
                         fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
                     )
+
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val activeRecipes = if (isRealImageState) hdRecipes else promptRecipes
-                        activeRecipes.forEach { (recipeLabel, recipeFull) ->
+                        bilingualRetroRecipes.forEach { (label, fullPrompt) ->
                             Surface(
                                 modifier = Modifier.clickable {
-                                    viewModel.prompt.value = recipeFull
-                                    Toast.makeText(context, if (isRealImageState) "تم تحديد الوصف الواقعي" else "تم تحديد وصفة البكسل", Toast.LENGTH_SHORT).show()
+                                    viewModel.prompt.value = fullPrompt
+                                    Toast.makeText(context, "تم اختيار: $label", Toast.LENGTH_SHORT).show()
                                 },
                                 shape = RoundedCornerShape(8.dp),
-                                color = DarkCard,
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                                color = Color(0xFF1D1D35),
+                                border = BorderStroke(1.dp, Color(0xFF00F0FF).copy(alpha = 0.2f))
                             ) {
                                 Text(
-                                    text = recipeLabel,
-                                    color = LightText,
+                                    text = label,
+                                    color = Color.White,
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
                                 )
                             }
@@ -938,7 +646,7 @@ fun PixelLabScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Big Artistic Generation Button
+                    // Generation button
                     Button(
                         onClick = { viewModel.generatePixelArt() },
                         modifier = Modifier
@@ -953,7 +661,7 @@ fun PixelLabScreen(
                                 .fillMaxSize()
                                 .background(
                                     brush = Brush.horizontalGradient(
-                                        colors = if (isRealImageState) listOf(ArtisticSecondary, ArtisticTertiary) else listOf(ArtisticPrimary, ArtisticSecondary)
+                                        colors = listOf(Color(0xFFFF007F), Color(0xFF00F0FF))
                                     ),
                                     shape = RoundedCornerShape(12.dp)
                                 ),
@@ -968,204 +676,10 @@ fun PixelLabScreen(
                                 ) {
                                     Icon(Icons.Default.Star, contentDescription = null, tint = Color.White)
                                     Text(
-                                        text = if (isRealImageState) "توليد صورة واقعية مذهلة ✦ Generate HD" else "توليد بالذكاء الاصطناعي ✦ Generate Retro",
+                                        text = "توليد صورة ريترو فخمة ✦ GENERATE",
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // --- Processing UI State Overlay Feedback ---
-                    AnimatedVisibility(visible = uiState is UiState.Error) {
-                        val errMsg = (uiState as? UiState.Error)?.message ?: ""
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFFEF4444).copy(alpha = 0.15f)),
-                            border = BorderStroke(1.dp, Color(0xFFEF4444)),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(
-                                text = "⚠️ حدث خطأ: $errMsg",
-                                color = Color(0xFFFCA5A5),
-                                fontSize = 12.sp,
-                                modifier = Modifier.padding(12.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- 4. Interactive Timeline Frame Strip Carousel ---
-        if (!isRealImageState) {
-            item {
-                val currentAnimation = (uiState as? UiState.Success)?.data
-                val frames = currentAnimation?.frames ?: listOf("0".repeat(256))
-                val palette = currentAnimation?.palette ?: listOf("#1e1b4b", "#f97316", "#facc15", "#ef4444", "#3b82f6", "#ffffff")
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "شريط السيناريو الزمني (Frames Timeline Scroll)",
-                            color = LightText,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        LazyRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            items(frames.size) { index ->
-                                val fString = frames[index]
-                                val isSelected = currentFrameIndex == index
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(64.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(Color.Black)
-                                        .border(
-                                            width = if (isSelected) 2.dp else 1.dp,
-                                            color = if (isSelected) ArtisticSecondary else Color.White.copy(alpha = 0.15f),
-                                            shape = RoundedCornerShape(8.dp)
-                                        )
-                                        .clickable {
-                                            viewModel.stopAnimationPlayback()
-                                            viewModel.setCurrentFrameIndex(index)
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Canvas(modifier = Modifier.fillMaxSize().padding(2.dp)) {
-                                        val cellSize = size.width / 16f
-                                        for (row in 0 until 16) {
-                                            for (col in 0 until 16) {
-                                                val cIdx = row * 16 + col
-                                                val char = if (cIdx < fString.length) fString[cIdx] else '0'
-                                                val c = getColorForChar(char, palette)
-                                                drawRect(
-                                                    color = c,
-                                                    topLeft = androidx.compose.ui.geometry.Offset(col * cellSize, row * cellSize),
-                                                    size = androidx.compose.ui.geometry.Size(cellSize, cellSize)
-                                                )
-                                            }
-                                        }
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(topStart = 6.dp))
-                                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "#${index + 1}",
-                                            color = Color.White,
-                                            fontSize = 8.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- 5. Studio History Gallery List ---
-        item {
-            if (historyList.isNotEmpty()) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "مكتبة المحفوظات الاستوديو (${historyList.size})",
-                        color = ArtisticTertiary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Start
-                    )
-
-                    historyList.forEach { histItem ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    viewModel.loadFromHistory(histItem)
-                                    Toast.makeText(context, "تم تحميل الرسوم: ${histItem.title}", Toast.LENGTH_SHORT).show()
-                                },
-                            colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                // Miniature Static rendering
-                                Box(
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(Color.Black)
-                                ) {
-                                    val fString = histItem.frames.firstOrNull() ?: "0".repeat(256)
-                                    Canvas(modifier = Modifier.fillMaxSize()) {
-                                        val cellSize = size.width / 16f
-                                        for (row in 0 until 16) {
-                                            for (col in 0 until 16) {
-                                                val charIdx = row * 16 + col
-                                                val char = if (charIdx < fString.length) fString[charIdx] else '0'
-                                                val c = getColorForChar(char, histItem.palette)
-                                                drawRect(
-                                                    color = c,
-                                                    topLeft = androidx.compose.ui.geometry.Offset(col * cellSize, row * cellSize),
-                                                    size = androidx.compose.ui.geometry.Size(cellSize, cellSize)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = histItem.title,
-                                        color = LightText,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = histItem.description,
-                                        color = MutedText,
-                                        fontSize = 11.sp,
-                                        maxLines = 1,
-                                        modifier = Modifier.padding(top = 2.dp)
-                                    )
-                                }
-
-                                Badge(
-                                    containerColor = ArtisticTertiary.copy(alpha = 0.15f),
-                                    contentColor = ArtisticTertiary
-                                ) {
-                                    Text(
-                                        text = "${histItem.frameCount} فريمز",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 10.sp,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        fontSize = 13.sp
                                     )
                                 }
                             }
@@ -1173,39 +687,6 @@ fun PixelLabScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-// Extension to safely dynamically implement non-compiled modifier elements
-private fun Modifier.scale(scale: Float) = this.then(
-    Modifier.size(height = (48 * scale).dp, width = (80 * scale).dp)
-)
-
-@Composable
-fun Base64Image(base64Str: String, modifier: Modifier = Modifier) {
-    val bitmap = remember(base64Str) {
-        try {
-            val decodedString = android.util.Base64.decode(base64Str, android.util.Base64.DEFAULT)
-            android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    if (bitmap != null) {
-        androidx.compose.foundation.Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentDescription = "Generated Real Image",
-            modifier = modifier,
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-        )
-    } else {
-        Box(
-            modifier = modifier.background(Color.DarkGray),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("فشل فك تشفير الصورة", color = Color.White, fontSize = 11.sp)
         }
     }
 }
