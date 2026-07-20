@@ -1,14 +1,15 @@
 package com.example.ui.screens
 
+import android.net.Uri
 import android.widget.Toast
 import com.example.R
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -61,8 +62,14 @@ fun PixelLabScreen(
     val selectedHDModel by viewModel.selectedHDModel.collectAsState()
     val realImageBase64 by viewModel.realImageBase64.collectAsState()
 
+    // Sideload model states
+    val isModelImported by viewModel.isModelImported.collectAsState()
+    val importedModelName by viewModel.importedModelName.collectAsState()
+    val importedModelSize by viewModel.importedModelSize.collectAsState()
+    val isImporting by viewModel.isImporting.collectAsState()
+    val importError by viewModel.importError.collectAsState()
+
     var showGridLines by remember { mutableStateOf(true) }
-    var showAdvancedSettings by remember { mutableStateOf(false) }
 
     // Glow Animation for Retro feel
     val infiniteTransition = rememberInfiniteTransition(label = "retro_glow")
@@ -75,6 +82,15 @@ fun PixelLabScreen(
         ),
         label = "glow"
     )
+
+    // Activity Result Launcher for importing `.gguf` file
+    val modelPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.importGgufModel(uri)
+        }
+    }
 
     // Standard Bilingual Retro Gaming Presets
     val bilingualRetroRecipes = listOf(
@@ -133,8 +149,8 @@ fun PixelLabScreen(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(50),
-                            color = Color(0xFF00FFCC).copy(alpha = 0.15f),
-                            border = BorderStroke(1.dp, Color(0xFF00FFCC))
+                            color = if (isModelImported) Color(0xFF00FFCC).copy(alpha = 0.15f) else Color(0xFFFF007F).copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF007F))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -145,11 +161,11 @@ fun PixelLabScreen(
                                     modifier = Modifier
                                         .size(8.dp)
                                         .clip(RoundedCornerShape(50))
-                                        .background(Color(0xFF00FFCC))
+                                        .background(if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF007F))
                                 )
                                 Text(
-                                    text = "BILINGUAL RETRO GGUF LOADED",
-                                    color = Color(0xFF00FFCC),
+                                    text = if (isModelImported) "GGUF MODEL LOADED" else "NO MODEL IMPORTED",
+                                    color = if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF007F),
                                     fontSize = 9.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -184,7 +200,140 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 2. CRT Screen & Pixel Canvas ---
+        // --- 2. Model Center (مركز النماذج) for Import & Status Info ---
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        width = 1.5.dp,
+                        color = if (isModelImported) Color(0xFF00FFCC).copy(alpha = 0.6f) else Color(0xFFFF3366).copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF3366)
+                        )
+                        Text(
+                            text = "مركز إدارة النماذج المحلية ✦ MODEL CENTER",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+
+                    Divider(color = Color(0xFF24243C))
+
+                    if (isImporting) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(color = Color(0xFF00F0FF), modifier = Modifier.size(28.dp))
+                            Text(
+                                text = "جاري استيراد وتهيئة ملف الـ GGUF محلياً... يرجى الانتظار",
+                                color = Color(0xFF00F0FF),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        if (isModelImported) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("اسم النموذج:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                    Text(importedModelName ?: "غير معروف", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("حجم الملف:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                    Text(importedModelSize ?: "0 MB", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("حالة التشغيل:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                    Text("جاهز ومكتمل (Offline Ready)", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Button(
+                                    onClick = { viewModel.deleteImportedModel() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3366)),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("حذف النموذج المستورد وتحرير المساحة", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        } else {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "التطبيق خفيف وحر! لم يتم تجميع أي نموذج ضخم بداخله. يرجى استيراد أي نموذج GGUF خاص بك لتفعيل التوليد الذكي بالكامل محلياً بدون إنترنت.",
+                                    color = Color(0xFFFFD700),
+                                    fontSize = 11.sp,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Button(
+                                    onClick = { modelPickerLauncher.launch("*/*") },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FFCC)),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("استيراد نموذج GGUF من جهازك", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    importError?.let { err ->
+                        Text(
+                            text = err,
+                            color = Color(0xFFFF3366),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // --- 3. CRT Screen & Pixel Canvas ---
         item {
             val currentAnimation = (uiState as? UiState.Success)?.data
             val palette = currentAnimation?.palette ?: listOf("#0B0F19", "#4F46E5", "#06B6D4", "#F43F5E", "#EC4899", "#FFFFFF")
@@ -323,7 +472,7 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 3. NES Console Controller (D-Pad & Buttons) ---
+        // --- 4. NES Console Controller (D-Pad & Buttons) ---
         item {
             Card(
                 modifier = Modifier
@@ -427,7 +576,7 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 4. Inputs & Bilingual Prompts config ---
+        // --- 5. Inputs & Bilingual Prompts config ---
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),

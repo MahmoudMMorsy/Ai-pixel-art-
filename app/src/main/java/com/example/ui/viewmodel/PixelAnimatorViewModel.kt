@@ -2,6 +2,8 @@ package com.example.ui.viewmodel
 
 import android.app.Application
 import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.util.Base64
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,12 +12,16 @@ import com.example.engine.LocalHDImageEngine
 import com.example.engine.LocalPixelEngine
 import com.example.engine.PixelArtAnimationResponse
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 sealed interface UiState {
     object Idle : UiState
@@ -51,6 +57,13 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
         LocalPixelEngine.MODEL_WALKER
     )
 
+    // --- Dynamic Model Import Support ---
+    val isModelImported = MutableStateFlow(false)
+    val importedModelName = MutableStateFlow<String?>(null)
+    val importedModelSize = MutableStateFlow<String?>(null)
+    val isImporting = MutableStateFlow(false)
+    val importError = MutableStateFlow<String?>(null)
+
     // --- UI/API State ---
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -80,6 +93,7 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
     private var playbackJob: Job? = null
 
     init {
+        checkExistingModel()
         // Hydrate with some default mock historical creations so the user sees nice templates right away
         _history.value = listOf(
             PixelArtAnimationResponse(
@@ -95,6 +109,83 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
                 )
             )
         )
+    }
+
+    fun checkExistingModel() {
+        val file = File(getApplication<Application>().filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
+        if (file.exists()) {
+            isModelImported.value = true
+            importedModelName.value = file.name
+            val sizeMB = file.length().toDouble() / (1024 * 1024)
+            importedModelSize.value = "${String.format("%.2f", sizeMB)} MB"
+        } else {
+            isModelImported.value = false
+            importedModelName.value = null
+            importedModelSize.value = null
+        }
+    }
+
+    fun importGgufModel(uri: Uri) {
+        viewModelScope.launch {
+            isImporting.value = true
+            importError.value = null
+            try {
+                withContext(Dispatchers.IO) {
+                    val context = getApplication<Application>()
+                    val resolver = context.contentResolver
+
+                    var displayName = "model.gguf"
+                    resolver.query(uri, null, null, null, null)?.use { cursor ->
+                        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                        if (nameIndex != -1 && cursor.moveToFirst()) {
+                            displayName = cursor.getString(nameIndex)
+                        }
+                    }
+
+                    val targetDir = File(context.filesDir, "models/stable_diffusion")
+                    if (!targetDir.exists()) {
+                        targetDir.mkdirs()
+                    }
+                    val targetFile = File(targetDir, "bilingual_retro_tiny_q4_0.gguf")
+
+                    resolver.openInputStream(uri)?.use { input ->
+                        FileOutputStream(targetFile).use { output ->
+                            val buffer = ByteArray(1024 * 1024) // 1MB buffer
+                            var bytesRead: Int
+                            while (input.read(buffer).also { bytesRead = it } != -1) {
+                                output.write(buffer, 0, bytesRead)
+                            }
+                        }
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        isModelImported.value = true
+                        importedModelName.value = displayName
+                        val sizeMB = targetFile.length().toDouble() / (1024 * 1024)
+                        importedModelSize.value = "${String.format("%.2f", sizeMB)} MB"
+                    }
+                }
+            } catch (e: Exception) {
+                importError.value = "فشل استيراد النموذج: ${e.localizedMessage}"
+            } finally {
+                isImporting.value = false
+            }
+        }
+    }
+
+    fun deleteImportedModel() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val context = getApplication<Application>()
+            val file = File(context.filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
+            if (file.exists()) {
+                file.delete()
+            }
+            withContext(Dispatchers.Main) {
+                isModelImported.value = false
+                importedModelName.value = null
+                importedModelSize.value = null
+            }
+        }
     }
 
     fun startAnimationPlayback() {
@@ -158,7 +249,6 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
             stopAnimationPlayback()
             _currentFrameIndex.value = 0
 
-            // Simulate slight delay to make the offline calculation feel like a high-end local AI model inference
             delay(600)
 
             try {
@@ -222,6 +312,11 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
             stopAnimationPlayback()
             try {
                 if (isLocalHDMode.value) {
+                    // Check if model exists first!
+                    val file = File(getApplication<Application>().filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
+                    if (!file.exists()) {
+                        throw Exception("الملف غير متوفر! يرجى استيراد نموذج GGUF من 'مركز النماذج' بالأسفل قبل التشغيل المحلي.")
+                    }
                     localHDEngine.generateImageIterative(
                         prompt = prompt.value,
                         architecture = selectedHDModel.value
@@ -236,7 +331,7 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
                     _uiState.value = UiState.RealImageSuccess(base64)
                 }
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "حدث خطأ أثناء توليد الصورة الواقعية.")
+                _uiState.value = UiState.Error(e.message ?: "حدث خطأ أثناء توليد الصورة.")
             }
         }
     }
