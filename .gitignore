@@ -19,3 +19,6 @@ app/retro_release.keystore
 
 # Allow committing our specific release APK
 !PixelAnimatorRetro.apk
+
+# Allow tracking models inside the models directory
+!models/*.gguf
