@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة عرض الصور المولدة بالذكاء الاصطناعي</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121214;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        header {
+            background-color: #1f1f23;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #4CAF50;
+            margin: 0;
+        }
+        p {
+            color: #b0b0b5;
+            font-size: 18px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .card {
+            background-color: #1f1f23;
+            border-radius: 10px;
+            overflow: hidden;
+            width: 512px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: scale(1.02);
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+            border-bottom: 2px solid #2d2d30;
+        }
+        .card-body {
+            padding: 15px;
+            text-align: right;
+        }
+        .card-title {
+            font-size: 20px;
+            color: #4CAF50;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .card-text {
+            color: #d1d1d6;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .badge {
+            background-color: #ff9800;
+            color: black;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .badge-success {
+            background-color: #4CAF50;
+            color: white;
+        }
+        footer {
+            margin-top: 50px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎮 منصة عرض ومعاينة الصور المولدة محلياً 🎮</h1>
+        <p>هذه المنصة تعرض لك الصور التي تم توليدها بالكامل عبر نموذج الذكاء الاصطناعي الكبير بصيغة GGUF محلياً على جهازك!</p>
+    </header>
+
+    <div class="container">
+        <!-- Card 1: Arabic Generated Image -->
+        <div class="card">
+            <img src="retro_arabic_generated.png" alt="الصورة العربية المولدة">
+            <div class="card-body">
+                <h3 class="card-title">1. الصورة العربية المولدة (مع دمج نصوص عربية سليمة)</h3>
+                <p class="card-text"><b>الوصف (Prompt):</b> A gorgeous retro fantasy pixel-art knight standing in front of a majestic castle, 8-bit NES color scheme</p>
+                <p class="card-text"><b>النص العربي المكتوب:</b> <span class="badge badge-success">فارس الأسطورة</span></p>
+                <p class="card-text"><b>أبعاد الصورة:</b> 512x512 بكسل</p>
+                <p class="card-text"><b>اسم الملف:</b> retro_arabic_generated.png</p>
+            </div>
+        </div>
+
+        <!-- Card 2: Test Image -->
+        <div class="card">
+            <img src="test.png" alt="صورة الاختبار">
+            <div class="card-body">
+                <h3 class="card-title">2. صورة الاختبار الأولية للنموذج الكبير</h3>
+                <p class="card-text"><b>الوصف (Prompt):</b> pixel knight hero</p>
+                <p class="card-text"><b>أبعاد الصورة:</b> 512x512 بكسل</p>
+                <p class="card-text"><b>اسم الملف:</b> test.png</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>تم التطوير والإنتاج بنجاح بواسطة صديقك المطور البطل! 🚀</p>
+    </footer>
+
+</body>
+</html>
