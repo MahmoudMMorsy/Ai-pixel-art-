@@ -1,6 +1,7 @@
 package com.retro.pixelanimator.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -35,6 +36,17 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
     private val geminiEngine = GeminiPixelEngine()
     private val localEngine = LocalPixelEngine()
     private val localHDEngine = LocalHDImageEngine(application)
+
+    // --- Retro Pixelator & Fusion Mode Parameters ---
+    val isImagePixelatorMode = MutableStateFlow(false)
+    val pixelatorImagesUris = MutableStateFlow<List<Uri>>(emptyList())
+    val pixelatorGridSize = MutableStateFlow(256)
+    val pixelatorColorCount = MutableStateFlow(48)
+    val pixelatorBlendStrength = MutableStateFlow(0.5f)
+    val pixelatedBitmap = MutableStateFlow<Bitmap?>(null)
+    val isPixelating = MutableStateFlow(false)
+    val pixelatorError = MutableStateFlow<String?>(null)
+    val pixelatorArabicText = MutableStateFlow("")
 
     // --- Core Parameters ---
     val prompt = MutableStateFlow("مكعب ناري متفجر يتلاشى")
@@ -333,6 +345,243 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "حدث خطأ أثناء توليد الصورة.")
             }
+        }
+    }
+
+    // --- Retro Pixelator & Fusion Engine Core ---
+
+    fun selectPixelatorImages(uris: List<Uri>) {
+        pixelatorImagesUris.value = uris.take(3)
+        processPixelation()
+    }
+
+    fun setPixelatorGridSize(size: Int) {
+        pixelatorGridSize.value = size
+        processPixelation()
+    }
+
+    fun setPixelatorColorCount(count: Int) {
+        pixelatorColorCount.value = count
+        processPixelation()
+    }
+
+    fun setPixelatorBlendStrength(strength: Float) {
+        pixelatorBlendStrength.value = strength
+        processPixelation()
+    }
+
+    fun setPixelatorArabicText(text: String) {
+        pixelatorArabicText.value = text
+        processPixelation()
+    }
+
+    fun processPixelation() {
+        val uris = pixelatorImagesUris.value
+        if (uris.isEmpty()) {
+            pixelatedBitmap.value = null
+            return
+        }
+
+        viewModelScope.launch {
+            isPixelating.value = true
+            pixelatorError.value = null
+
+            try {
+                val context = getApplication<Application>()
+                val loadedBitmaps = withContext(Dispatchers.IO) {
+                    uris.mapNotNull { uri ->
+                        try {
+                            val inputStream = context.contentResolver.openInputStream(uri)
+                            android.graphics.BitmapFactory.decodeStream(inputStream)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                }
+
+                if (loadedBitmaps.isEmpty()) {
+                    throw Exception("فشل تحميل الصور المحددة.")
+                }
+
+                val gridSize = pixelatorGridSize.value
+                val colorCount = pixelatorColorCount.value
+                val blendStrength = pixelatorBlendStrength.value
+                val text = pixelatorArabicText.value
+
+                val processed = withContext(Dispatchers.Default) {
+                    // 1. Blend up to 3 bitmaps
+                    val blended = blendBitmaps(loadedBitmaps, gridSize, gridSize, blendStrength)
+
+                    // 2. Perform dynamic K-Means color quantization
+                    val quantized = quantizeColors(blended, colorCount)
+
+                    // 3. Overlay Arabic text
+                    if (text.isNotEmpty()) {
+                        overlayArabicTextOnBitmap(context, quantized, text)
+                    } else {
+                        quantized
+                    }
+                }
+
+                pixelatedBitmap.value = processed
+            } catch (e: Exception) {
+                pixelatorError.value = "حدث خطأ أثناء معالجة البكسل: ${e.localizedMessage}"
+            } finally {
+                isPixelating.value = false
+            }
+        }
+    }
+
+    private fun blendBitmaps(bitmaps: List<Bitmap>, targetWidth: Int, targetHeight: Int, blendStrength: Float): Bitmap {
+        if (bitmaps.isEmpty()) {
+            return Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
+        }
+        if (bitmaps.size == 1) {
+            return Bitmap.createScaledBitmap(bitmaps[0], targetWidth, targetHeight, true)
+        }
+
+        val result = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(result)
+        val paint = android.graphics.Paint()
+
+        paint.color = android.graphics.Color.BLACK
+        canvas.drawRect(0f, 0f, targetWidth.toFloat(), targetHeight.toFloat(), paint)
+
+        for (i in bitmaps.indices) {
+            val scaled = Bitmap.createScaledBitmap(bitmaps[i], targetWidth, targetHeight, true)
+            if (i == 0) {
+                paint.alpha = 255
+                canvas.drawBitmap(scaled, 0f, 0f, paint)
+            } else {
+                paint.alpha = (blendStrength * 255).toInt().coerceIn(0, 255)
+                canvas.drawBitmap(scaled, 0f, 0f, paint)
+            }
+        }
+        return result
+    }
+
+    private fun quantizeColors(bitmap: Bitmap, maxColors: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+
+        val sampledPixels = pixels.toList().shuffled().take(maxColors.coerceAtMost(pixels.size))
+        val centroids = sampledPixels.toIntArray()
+
+        if (centroids.isEmpty()) return bitmap
+
+        val assignments = IntArray(pixels.size)
+        val centroidSumR = LongArray(centroids.size)
+        val centroidSumG = LongArray(centroids.size)
+        val centroidSumB = LongArray(centroids.size)
+        val centroidCount = IntArray(centroids.size)
+
+        for (iter in 0 until 5) {
+            centroidSumR.fill(0)
+            centroidSumG.fill(0)
+            centroidSumB.fill(0)
+            centroidCount.fill(0)
+
+            for (i in pixels.indices) {
+                val p = pixels[i]
+                val r = (p shr 16) and 0xFF
+                val g = (p shr 8) and 0xFF
+                val b = p and 0xFF
+
+                var minDist = Double.MAX_VALUE
+                var bestIdx = 0
+                for (c in centroids.indices) {
+                    val cp = centroids[c]
+                    val cr = (cp shr 16) and 0xFF
+                    val cg = (cp shr 8) and 0xFF
+                    val cb = cp and 0xFF
+
+                    val dist = (r - cr) * (r - cr) + (g - cg) * (g - cg) + (b - cb) * (b - cb)
+                    if (dist < minDist) {
+                        minDist = dist.toDouble()
+                        bestIdx = c
+                    }
+                }
+                assignments[i] = bestIdx
+                centroidSumR[bestIdx] = centroidSumR[bestIdx] + r.toLong()
+                centroidSumG[bestIdx] = centroidSumG[bestIdx] + g.toLong()
+                centroidSumB[bestIdx] = centroidSumB[bestIdx] + b.toLong()
+                centroidCount[bestIdx] = centroidCount[bestIdx] + 1
+            }
+
+            for (c in centroids.indices) {
+                val count = centroidCount[c]
+                if (count > 0) {
+                    val avgR = (centroidSumR[c] / count).toInt()
+                    val avgG = (centroidSumG[c] / count).toInt()
+                    val avgB = (centroidSumB[c] / count).toInt()
+                    centroids[c] = (0xFF shl 24) or (avgR shl 16) or (avgG shl 8) or avgB
+                }
+            }
+        }
+
+        val quantizedPixels = IntArray(pixels.size)
+        for (i in pixels.indices) {
+            quantizedPixels[i] = centroids[assignments[i]]
+        }
+
+        val resultBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        resultBitmap.setPixels(quantizedPixels, 0, width, 0, 0, width, height)
+        return resultBitmap
+    }
+
+    private fun overlayArabicTextOnBitmap(context: Context, bitmap: Bitmap, text: String): Bitmap {
+        if (text.isEmpty()) return bitmap
+
+        val result = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = android.graphics.Canvas(result)
+
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            textSize = (bitmap.height * 0.09f)
+            textAlign = android.graphics.Paint.Align.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        }
+
+        val outlinePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.BLACK
+            textSize = (bitmap.height * 0.09f)
+            textAlign = android.graphics.Paint.Align.CENTER
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = 6f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        }
+
+        try {
+            val assetManager = context.assets
+            val typeface = android.graphics.Typeface.createFromAsset(assetManager, "fonts/NotoNaskhArabic-Regular.ttf")
+            paint.typeface = typeface
+            outlinePaint.typeface = typeface
+        } catch (e: Exception) {
+            // Fallback
+        }
+
+        val x = bitmap.width / 2f
+        val y = bitmap.height * 0.85f
+
+        canvas.drawText(text, x, y, outlinePaint)
+        canvas.drawText(text, x, y, paint)
+
+        return result
+    }
+
+    fun exportPixelatedImage(context: Context): String {
+        val bitmap = pixelatedBitmap.value ?: return "لا توجد صورة للتصدير."
+        return try {
+            val fileName = "retro_pixel_art_${System.currentTimeMillis()}.png"
+            val targetFile = File(context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES), fileName)
+            FileOutputStream(targetFile).use { output ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+            }
+            "تم تصدير الصورة بنجاح إلى: ${targetFile.absolutePath}"
+        } catch (e: Exception) {
+            "فشل تصدير الصورة: ${e.localizedMessage}"
         }
     }
 
