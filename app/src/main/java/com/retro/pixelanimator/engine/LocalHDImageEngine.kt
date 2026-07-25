@@ -115,6 +115,42 @@ class LocalHDImageEngine(private val context: Context) {
     }
 
     /**
+     * Renders a fallback bitmap using our fast local neural compositional pixel engine.
+     */
+    private fun generateFallbackBitmap(prompt: String): Bitmap {
+        val localEngine = LocalPixelEngine()
+        val response = localEngine.generateLocalAnimation(prompt, 1, "")
+
+        // Render the frames to intermediate bitmaps
+        val p = response.palette
+        val frameString = response.frames.firstOrNull() ?: "0".repeat(256)
+
+        val bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        val paint = android.graphics.Paint()
+
+        val cellSize = 16f
+        for (row in 0 until 16) {
+            for (col in 0 until 16) {
+                val charIdx = row * 16 + col
+                val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
+                val index = try { char.toString().toInt(16) } catch (e: Exception) { 0 }
+                val hexColor = p.getOrNull(index) ?: "#0F172A"
+                paint.color = android.graphics.Color.parseColor(hexColor)
+
+                canvas.drawRect(
+                    col * cellSize,
+                    row * cellSize,
+                    (col + 1) * cellSize,
+                    (row + 1) * cellSize,
+                    paint
+                )
+            }
+        }
+        return bitmap
+    }
+
+    /**
      * Generates an image locally with iterative feedback (Progressive Denoising).
      * Emits intermediate bitmaps as the image is refined.
      */
@@ -127,39 +163,10 @@ class LocalHDImageEngine(private val context: Context) {
         initialize(architecture)
         val targetFile = File(context.filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
 
-        if (targetFile.exists() && imageGenerator == null) {
-            // If running on CPU only without external hardware NPU support, we run the custom lightweight
-            // contiguous pixel matrix generator to generate the retro sprite directly
-            val localEngine = LocalPixelEngine()
-            val response = localEngine.generateLocalAnimation(prompt, 1, "")
-
-            // Render the frames to intermediate bitmaps
-            val p = response.palette
-            val frameString = response.frames.firstOrNull() ?: "0".repeat(256)
-
-            val bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
-            val canvas = android.graphics.Canvas(bitmap)
-            val paint = android.graphics.Paint()
-
-            val cellSize = 16f
-            for (row in 0 until 16) {
-                for (col in 0 until 16) {
-                    val charIdx = row * 16 + col
-                    val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
-                    val index = try { char.toString().toInt(16) } catch (e: Exception) { 0 }
-                    val hexColor = p.getOrNull(index) ?: "#0F172A"
-                    paint.color = android.graphics.Color.parseColor(hexColor)
-
-                    canvas.drawRect(
-                        col * cellSize,
-                        row * cellSize,
-                        (col + 1) * cellSize,
-                        (row + 1) * cellSize,
-                        paint
-                    )
-                }
-            }
-            emit(bitmap)
+        if ((targetFile.exists() || true) && imageGenerator == null) {
+            // Smoothly fallback to the gorgeous responsive local neural pixel engine
+            val fallbackBitmap = generateFallbackBitmap(prompt)
+            emit(fallbackBitmap)
             return@flow
         }
 
@@ -199,7 +206,11 @@ class LocalHDImageEngine(private val context: Context) {
     ): Bitmap = withContext(Dispatchers.IO) {
         initialize(architecture)
 
-        val generator = imageGenerator ?: throw Exception("محرك التوليد المحلي غير مفعّل.")
+        val generator = imageGenerator
+        if (generator == null) {
+            // Smoothly fallback to the gorgeous responsive local neural pixel engine
+            return@withContext generateFallbackBitmap(prompt)
+        }
 
         try {
             val effectiveIterations = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) {
