@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <android/log.h>
-#include "../../../../../stable-diffusion.cpp/stable-diffusion.h"
+#include "stable-diffusion.h"
 
 #define TAG "StableDiffusionJNI"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)

@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project("stable_diffusion_jni")
 
-# Relative path to the stable-diffusion.cpp root folder
-set(SD_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../stable-diffusion.cpp")
+# Absolute path to the stable-diffusion.cpp root folder in the sandbox
+set(SD_CPP_DIR "/app/stable-diffusion.cpp")
 
 # Standard includes for stable-diffusion.cpp and ggml
 include_directories(
     "${SD_CPP_DIR}"
+    "${SD_CPP_DIR}/src"
     "${SD_CPP_DIR}/include"
     "${SD_CPP_DIR}/ggml/include"
     "${SD_CPP_DIR}/ggml/src"
@@ -17,8 +18,8 @@ include_directories(
 # Add source files from stable-diffusion.cpp and ggml
 set(SD_SOURCES
     stable_diffusion_jni.cpp
-    "${SD_CPP_DIR}/stable-diffusion.cpp"
-    "${SD_CPP_DIR}/upscaler.cpp"
+    "${SD_CPP_DIR}/src/stable-diffusion.cpp"
+    "${SD_CPP_DIR}/src/upscaler.cpp"
     "${SD_CPP_DIR}/src/tokenizers/tokenizer.cpp"
     "${SD_CPP_DIR}/src/tokenizers/tokenize_util.cpp"
     "${SD_CPP_DIR}/src/tokenizers/vocab/vocab.cpp"

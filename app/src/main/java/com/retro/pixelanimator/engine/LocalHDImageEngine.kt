@@ -206,12 +206,6 @@ class LocalHDImageEngine(private val context: Context) {
 
         val generator = imageGenerator ?: throw Exception("محرك التوليد المحلي غير مفعّل.")
 
-        val effectiveIterations = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) {
-            iterations.coerceAtMost(4)
-        } else {
-            iterations
-        }
-
         try {
             // Initialize inputs for the iterative process
             generator.setInputs(prompt, effectiveIterations, seed)
