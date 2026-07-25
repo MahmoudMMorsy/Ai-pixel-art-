@@ -20,26 +20,18 @@ Java_com_retro_pixelanimator_engine_LocalHDImageEngine_initModel(
     const char* path = env->GetStringUTFChars(model_path, nullptr);
     LOGI("Initializing GGUF Model from path: %s", path);
 
-    // Create new Stable Diffusion context using the native C++ API
-    // sd_ctx_t* sd_ctx = new_sd_ctx(model_path, vae_path, lora_model_dir, ...);
-    sd_ctx_t* sd_ctx = new_sd_ctx(
-        path,
-        "", // vae_path
-        "", // lora_model_dir
-        "", // embed_dir_path
-        "", // stacked_id_embed_dir_path
-        "", // control_net_path_c_str
-        "", // vae_decode_only
-        "", // vae_tiling
-        false, // free_params_immediately
-        false, // vae_tiling
-        false, // lora_tiling
-        4, // n_threads
-        SD_TYPE_Q4_0, // wtype
-        STD_DEFAULT, // rng_type
-        false, // schedule
-        false // keep_clip_on_cpu
-    );
+    // Initialize standard context parameters
+    sd_ctx_params_t params;
+    sd_ctx_params_init(&params);
+
+    // Configure GGUF model path
+    params.model_path = path;
+    params.rng_type = STD_DEFAULT_RNG;
+    params.n_threads = 4;
+    params.wtype = SD_TYPE_Q4_0;
+
+    // Create new Stable Diffusion context
+    sd_ctx_t* sd_ctx = new_sd_ctx(&params);
 
     env->ReleaseStringUTFChars(model_path, path);
 
@@ -65,27 +57,33 @@ Java_com_retro_pixelanimator_engine_LocalHDImageEngine_generateImageFromC(
     const char* c_prompt = env->GetStringUTFChars(prompt, nullptr);
     LOGI("Generating image with prompt: '%s' | Steps: %d | Size: %dx%d", c_prompt, steps, width, height);
 
+    // Initialize image generation parameters using the new stable-diffusion.cpp API
+    sd_img_gen_params_t params;
+    sd_img_gen_params_init(&params);
+
+    params.prompt = c_prompt;
+    params.width = width;
+    params.height = height;
+    params.seed = 42;
+    params.batch_count = 1;
+
+    params.sample_params.sample_steps = steps;
+    params.sample_params.sample_method = EULER_A_SAMPLE_METHOD;
+    params.sample_params.scheduler = sd_get_default_scheduler(sd_ctx, EULER_A_SAMPLE_METHOD);
+
+    sd_image_t* results = nullptr;
+    int num_images = 0;
+
     // Call the native C++ Stable Diffusion generator
-    sd_image_t* results = txt2img(
-        sd_ctx,
-        c_prompt,
-        "", // negative prompt
-        7.0f, // cfg_scale
-        width,
-        height,
-        EULER_A, // sample_method
-        steps,
-        42, // seed
-        1, // batch_count
-        nullptr, // control_net_image
-        0.0f, // control_strength
-        0.0f // style_strength
-    );
+    bool success = generate_image(sd_ctx, &params, &results, &num_images);
 
     env->ReleaseStringUTFChars(prompt, c_prompt);
 
-    if (results == nullptr || results[0].data == nullptr) {
+    if (!success || results == nullptr || num_images == 0 || results[0].data == nullptr) {
         LOGE("Generation failed or returned null image data!");
+        if (results != nullptr) {
+            free_sd_images(results, num_images);
+        }
         return nullptr;
     }
 
@@ -106,9 +104,8 @@ Java_com_retro_pixelanimator_engine_LocalHDImageEngine_generateImageFromC(
 
     env->SetByteArrayRegion(arr, 0, size, reinterpret_cast<const jbyte*>(argb_buffer.data()));
 
-    // Free native allocations
-    free(results[0].data);
-    free(results);
+    // Free native allocations using the official API
+    free_sd_images(results, num_images);
 
     LOGI("Successfully converted and returned generated native bitmap buffer!");
     return arr;

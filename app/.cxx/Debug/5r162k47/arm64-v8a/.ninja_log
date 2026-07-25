@@ -1,0 +1,8 @@
+# ninja log v5
+0	7	0	clean	2d2f43cf2094d251
+0	14	0	clean	2d2f43cf2094d251
+0	2104	1784983225140663152	CMakeFiles/stable_diffusion_jni.dir/stable_diffusion_jni.cpp.o	dd13636cdc57691f
+2106	139023	1784983361784661614	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/stable-diffusion.cpp.o	5f15dbc087f49581
+139023	143476	1784983366504661561	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenizer.cpp.o	bbcc7a4ddeda77d5
+143476	150760	1784983373780661479	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/upscaler.cpp.o	4d96a7af3b3dc636
+150761	151979	1784983375016661465	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenize_util.cpp.o	ff1e052b7cef2cfc
