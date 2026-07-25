@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pixel Animator</string>
+    <string name="app_name">Local Pixel</string>
     <string name="local_hd_title">مصفوفة المعالجة المحلية (On-Device AI)</string>
     <string name="cloud_hd_title">محرك الانتشار السحابي (Cloud Diffusion)</string>
     <string name="local_hd_desc">توليد احترافي فائق الدقة باستخدام وحدات المعالجة العصبية بالجهاز. يضمن هذا الوضع خصوصية البيانات الكاملة والعمل دون اتصال بالإنترنت.</string>
