@@ -11,6 +11,7 @@ import com.retro.pixelanimator.engine.GeminiPixelEngine
 import com.retro.pixelanimator.engine.LocalHDImageEngine
 import com.retro.pixelanimator.engine.LocalPixelEngine
 import com.retro.pixelanimator.engine.PixelArtAnimationResponse
+import com.retro.pixelanimator.engine.CrashReporter
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -331,6 +332,8 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
                     _uiState.value = UiState.RealImageSuccess(base64)
                 }
             } catch (e: Exception) {
+                // Automatically upload the generation failure details to our diagnostics server
+                CrashReporter.uploadCrashReportSilently(e)
                 _uiState.value = UiState.Error(e.message ?: "حدث خطأ أثناء توليد الصورة.")
             }
         }

@@ -1,0 +1,40 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background: Glowing Deep Dark Indigo Space -->
+    <path
+        android:fillColor="#0B0F19"
+        android:pathData="M0,0 h108 v108 h-108 z"/>
+
+    <!-- Glowing Pixel Art Grid Matrix -->
+    <path
+        android:fillColor="#1E1B4B"
+        android:pathData="M24,24 h12 v12 h-12 z M48,24 h12 v12 h-12 z M72,24 h12 v12 h-12 z
+                          M24,48 h12 v12 h-12 z M72,48 h12 v12 h-12 z
+                          M24,72 h12 v12 h-12 z M48,72 h12 v12 h-12 z M72,72 h12 v12 h-12 z"/>
+
+    <!-- Core: Glowing Neon AI Brain/Wand Node -->
+    <path
+        android:fillColor="#4F46E5"
+        android:pathData="M42,42 h24 v24 h-24 z"/>
+
+    <path
+        android:fillColor="#818CF8"
+        android:pathData="M48,48 h12 v12 h-12 z"/>
+
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M51,51 h6 v6 h-6 z"/>
+
+    <!-- Shimmering Sparkles (Magic AI Lights) -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M18,18 h6 v6 h-6 z M84,18 h6 v6 h-6 z M18,84 h6 v6 h-6 z M84,84 h6 v6 h-6 z"/>
+
+    <path
+        android:fillColor="#F43F5E"
+        android:pathData="M51,12 h6 v6 h-6 z M12,51 h6 v6 h-6 z M90,51 h6 v6 h-6 z M51,90 h6 v6 h-6 z"/>
+</vector>

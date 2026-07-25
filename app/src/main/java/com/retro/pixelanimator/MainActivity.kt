@@ -12,11 +12,17 @@ import com.retro.pixelanimator.ui.screens.PixelLabScreen
 import com.retro.pixelanimator.ui.theme.PixelAnimatorTheme
 import com.retro.pixelanimator.ui.viewmodel.PixelAnimatorViewModel
 
+import com.retro.pixelanimator.engine.CrashReporter
+
 class MainActivity : ComponentActivity() {
     private val viewModel: PixelAnimatorViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Initialize the automatic crash and error reporting engine
+        CrashReporter.initialize(this)
+
         setContent {
             PixelAnimatorTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
