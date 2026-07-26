@@ -3,25 +3,16 @@ package com.retro.pixelanimator.engine
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 /**
- * Handles automatic on-device crash tracking, local error storage, and automatic
- * cloud diagnostic reporting to help developers easily locate JNI or model failures.
+ * Handles automatic on-device crash tracking and local error storage
+ * to help developers easily locate JNI or model failures.
  */
 object CrashReporter {
     private const val TAG = "CrashReporter"
-    private val client = OkHttpClient()
     private var appContext: Context? = null
 
     fun initialize(context: Context) {
@@ -31,7 +22,6 @@ object CrashReporter {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             saveCrashLog(throwable)
-            uploadCrashReportSilently(throwable)
             defaultHandler?.uncaughtException(thread, throwable)
         }
     }
@@ -65,37 +55,6 @@ object CrashReporter {
             Log.e(TAG, "Failed to save crash log locally: ${e.localizedMessage}")
         }
         return report
-    }
-
-    /**
-     * Automatically uploads the crash report to an anonymous diagnostic sharing API
-     * (such as GoFile / File.io) and prints the shareable debug link to help developers.
-     */
-    fun uploadCrashReportSilently(throwable: Throwable) {
-        val reportText = saveCrashLog(throwable)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // Post crash report to an anonymous secure text API (File.io)
-                val mediaType = "text/plain".toMediaType()
-                val body = reportText.toRequestBody(mediaType)
-
-                val request = Request.Builder()
-                    .url("https://file.io")
-                    .post(body)
-                    .build()
-
-                client.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        val json = JSONObject(response.body?.string() ?: "{}")
-                        val link = json.optString("link")
-                        Log.i(TAG, "🚨 CRASH UPLOADED SUCCESSFULLY! Direct link to diagnostic report: $link")
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to send diagnostic report to server: ${e.localizedMessage}")
-            }
-        }
     }
 
     fun getLatestCrashReport(): String {

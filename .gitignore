@@ -1,6 +1,7 @@
 .gradle/
 app/build/
 build/
+app/.cxx/
 .env
 *.apk
 *.log

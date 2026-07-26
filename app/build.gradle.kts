@@ -32,20 +32,20 @@ android {
         buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
 
         // Configure native compiler arguments for stable-diffusion.cpp
-        // externalNativeBuild {
-        //     cmake {
-        //         arguments += "-DANDROID_STL=c++_shared"
-        //         cppFlags += "-O3 -DGGML_MAX_NAME=128"
-        //     }
-        // }
+        externalNativeBuild {
+            cmake {
+                arguments += "-DANDROID_STL=c++_shared"
+                cppFlags += "-O3 -DGGML_MAX_NAME=128"
+            }
+        }
     }
 
-    // externalNativeBuild {
-    //     cmake {
-    //         path = file("src/main/cpp/CMakeLists.txt")
-    //         version = "3.22.1"
-    //     }
-    // }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
 
     buildTypes {
         release {

@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project("stable_diffusion_jni")
 
-# Absolute path to the stable-diffusion.cpp root folder in the sandbox
-set(SD_CPP_DIR "/app/stable-diffusion.cpp")
+# Relative path to the stable-diffusion.cpp root folder from CMakeLists.txt (which is inside app/src/main/cpp)
+set(SD_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../stable-diffusion.cpp")
 
 # Define job pool to limit parallel compiles to 1 to prevent Out-Of-Memory (OOM) failures in restricted environments
 set_property(GLOBAL PROPERTY JOB_POOLS compile_job_pool=1)
