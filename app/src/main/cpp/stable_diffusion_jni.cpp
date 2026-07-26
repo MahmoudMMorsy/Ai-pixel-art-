@@ -27,8 +27,13 @@ Java_com_retro_pixelanimator_engine_LocalHDImageEngine_initModel(
     // Configure GGUF model path
     params.model_path = path;
     params.rng_type = STD_DEFAULT_RNG;
-    params.n_threads = 4;
+
+    // Dynamically calculate dynamic safe thread allocation based on device cores
+    int available_cores = sd_get_num_physical_cores();
+    params.n_threads = (available_cores > 0) ? (available_cores > 4 ? 4 : available_cores) : 2;
     params.wtype = SD_TYPE_Q4_0;
+
+    LOGI("Available cores detected: %d. Setting safe thread count to: %d", available_cores, params.n_threads);
 
     // Create new Stable Diffusion context
     sd_ctx_t* sd_ctx = new_sd_ctx(&params);
@@ -92,14 +97,16 @@ Java_com_retro_pixelanimator_engine_LocalHDImageEngine_generateImageFromC(
     int size = pixel_count * 4; // ARGB_8888 byte size
     jbyteArray arr = env->NewByteArray(size);
 
-    // Convert 24-bit RGB to 32-bit ARGB_8888 for direct Bitmap loading in Android
+    // Convert 24-bit RGB to 32-bit RGBA_8888 for direct Bitmap loading in Android.
+    // In Android Bitmap (with Config.ARGB_8888 under Little Endian system), copyPixelsFromBuffer
+    // expects a byte layout of R, G, B, A (which is mapped to uint32_t packed as 0xAABBGGRR).
     std::vector<uint32_t> argb_buffer(pixel_count);
     uint8_t* rgb_data = results[0].data;
     for (int i = 0; i < pixel_count; i++) {
         uint8_t r = rgb_data[i * 3 + 0];
         uint8_t g = rgb_data[i * 3 + 1];
         uint8_t b = rgb_data[i * 3 + 2];
-        argb_buffer[i] = (0xFF000000) | (r << 16) | (g << 8) | b;
+        argb_buffer[i] = (0xFF000000) | (b << 16) | (g << 8) | r;
     }
 
     env->SetByteArrayRegion(arr, 0, size, reinterpret_cast<const jbyte*>(argb_buffer.data()));

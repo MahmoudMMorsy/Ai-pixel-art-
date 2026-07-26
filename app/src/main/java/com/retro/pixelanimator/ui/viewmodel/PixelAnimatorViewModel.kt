@@ -332,8 +332,8 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
                     _uiState.value = UiState.RealImageSuccess(base64)
                 }
             } catch (e: Exception) {
-                // Automatically upload the generation failure details to our diagnostics server
-                CrashReporter.uploadCrashReportSilently(e)
+                // Save the crash locally to diagnostics
+                CrashReporter.saveCrashLog(e)
                 _uiState.value = UiState.Error(e.message ?: "حدث خطأ أثناء توليد الصورة.")
             }
         }

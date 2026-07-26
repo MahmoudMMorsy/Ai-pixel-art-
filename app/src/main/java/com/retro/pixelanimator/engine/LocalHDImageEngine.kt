@@ -20,11 +20,19 @@ class LocalHDImageEngine(private val context: Context) {
 
     // Load the native compiled stable-diffusion.cpp JNI wrapper
     companion object {
+        var isNativeLibraryLoaded = false
+        var libraryLoadErrorMsg: String? = null
+
         init {
             try {
                 System.loadLibrary("stable_diffusion_jni")
+                isNativeLibraryLoaded = true
             } catch (e: UnsatisfiedLinkError) {
-                // If running in environment without compiled binary, log and skip
+                isNativeLibraryLoaded = false
+                libraryLoadErrorMsg = e.localizedMessage
+            } catch (e: Exception) {
+                isNativeLibraryLoaded = false
+                libraryLoadErrorMsg = e.localizedMessage
             }
         }
     }
@@ -92,16 +100,29 @@ class LocalHDImageEngine(private val context: Context) {
         val targetFile = File(context.filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
         val modelFileExists = targetFile.exists()
 
-        if (!targetFile.exists() && (!modelDir.exists() || !modelDir.isDirectory)) {
+        if (modelFileExists) {
+            if (!targetFile.canRead()) {
+                throw Exception("نموذج GGUF موجود ولكنه غير قابل للقراءة! تأكد من صلاحيات الوصول للملف.")
+            }
+            if (targetFile.length() < 1000000L) {
+                throw Exception("ملف نموذج GGUF تالف أو صغير للغاية بشكل غير طبيعي!")
+            }
+        } else if (!modelDir.exists() || !modelDir.isDirectory) {
             val modelName = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) "Flux.1" else "Stable Diffusion"
             throw Exception("ملفات نموذج $modelName غير موجودة في: $modelPath")
         }
 
         try {
             if (modelFileExists) {
+                if (!isNativeLibraryLoaded) {
+                    throw Exception("مكتبة JNI غير محملة: " + (libraryLoadErrorMsg ?: "خطأ غير معروف في التحميل"))
+                }
                 // Natively initialize and load the GGUF model via our compiled stable-diffusion.cpp JNI wrapper
                 if (modelCtxPointer == 0L) {
                     modelCtxPointer = initModel(targetFile.absolutePath)
+                    if (modelCtxPointer == 0L) {
+                        throw Exception("فشل تهيئة نموذج GGUF داخلياً في مكتبة stable-diffusion.cpp")
+                    }
                 }
                 currentArchitecture = architecture
             } else {
@@ -187,13 +208,22 @@ class LocalHDImageEngine(private val context: Context) {
         }
 
         if (modelCtxPointer != 0L) {
+            if (!isNativeLibraryLoaded) {
+                throw Exception("مكتبة stable_diffusion_jni غير محملة للتشغيل")
+            }
             // Native GGUF loading and generation through our stable-diffusion.cpp JNI wrapper!
-            val argbData = generateImageFromC(modelCtxPointer, prompt, effectiveIterations, 256, 256)
+            val argbData = try {
+                generateImageFromC(modelCtxPointer, prompt, effectiveIterations, 256, 256)
+            } catch (e: Exception) {
+                throw Exception("خطأ أثناء استدعاء التوليد من JNI C++: ${e.localizedMessage}")
+            }
             if (argbData != null) {
                 val bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
                 bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbData))
                 emit(bitmap)
                 return@flow
+            } else {
+                throw Exception("فشل التوليد عبر GGUF: المكتبة لم ترجع أي بيانات للصورة.")
             }
         }
 
@@ -241,12 +271,21 @@ class LocalHDImageEngine(private val context: Context) {
         }
 
         if (modelCtxPointer != 0L) {
+            if (!isNativeLibraryLoaded) {
+                throw Exception("مكتبة stable_diffusion_jni غير محملة للتشغيل")
+            }
             // Native GGUF loading and generation through our stable-diffusion.cpp JNI wrapper!
-            val argbData = generateImageFromC(modelCtxPointer, prompt, effectiveIterations, 256, 256)
+            val argbData = try {
+                generateImageFromC(modelCtxPointer, prompt, effectiveIterations, 256, 256)
+            } catch (e: Exception) {
+                throw Exception("خطأ أثناء استدعاء التوليد من JNI C++: ${e.localizedMessage}")
+            }
             if (argbData != null) {
                 val bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
                 bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbData))
                 return@withContext bitmap
+            } else {
+                throw Exception("فشل التوليد عبر GGUF: المكتبة لم ترجع أي بيانات للصورة.")
             }
         }
 
@@ -270,5 +309,9 @@ class LocalHDImageEngine(private val context: Context) {
     fun close() {
         imageGenerator?.close()
         imageGenerator = null
+        if (modelCtxPointer != 0L) {
+            freeModelContext(modelCtxPointer)
+            modelCtxPointer = 0L
+        }
     }
 }
