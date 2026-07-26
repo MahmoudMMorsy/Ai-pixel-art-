@@ -466,8 +466,11 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
         val pixels = IntArray(width * height)
         bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
 
-        val sampledPixels = pixels.toList().shuffled().take(maxColors.coerceAtMost(pixels.size))
-        val centroids = sampledPixels.toIntArray()
+        val random = java.util.Random()
+        val centroids = IntArray(maxColors.coerceAtMost(pixels.size))
+        for (c in centroids.indices) {
+            centroids[c] = pixels[random.nextInt(pixels.size)]
+        }
 
         if (centroids.isEmpty()) return bitmap
 
