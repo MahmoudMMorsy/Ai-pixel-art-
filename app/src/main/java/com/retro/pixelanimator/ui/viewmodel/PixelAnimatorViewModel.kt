@@ -42,7 +42,7 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
     val paletteHint = MutableStateFlow("ألوان نارية مشبعة (برتقالي وأصفر مع رمادي داكن)")
 
     // --- Local Model Selection ---
-    val isCloudEnabled = MutableStateFlow(true) // Run Gemini Cloud AI by default (Real Image Generation Model!)
+    val isCloudEnabled = MutableStateFlow(false) // Toggle to local mode by default so users run model instantly
     val selectedLocalModel = MutableStateFlow(LocalPixelEngine.MODEL_DIFFUSION)
     
     val localModelsList = listOf(
@@ -69,8 +69,8 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     // --- Mode Control (Pixel Art vs Real HD Image Mode) ---
-    val isRealImageMode = MutableStateFlow(false)
-    val isLocalHDMode = MutableStateFlow(false) // Toggle for Local vs Cloud HD generation
+    val isRealImageMode = MutableStateFlow(true) // Default to generating GGUF Images directly
+    val isLocalHDMode = MutableStateFlow(true) // Toggle for Local HD generation
     val selectedHDModel = MutableStateFlow(LocalHDImageEngine.ModelArchitecture.STABLE_DIFFUSION_V1_5)
 
     private val _realImageBase64 = MutableStateFlow<String?>(null)
@@ -112,11 +112,11 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun checkExistingModel() {
-        val file = File(getApplication<Application>().filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
-        if (file.exists()) {
+        val activeGguf = localHDEngine.findAvailableGgufModel()
+        if (activeGguf != null && activeGguf.exists()) {
             isModelImported.value = true
-            importedModelName.value = file.name
-            val sizeMB = file.length().toDouble() / (1024 * 1024)
+            importedModelName.value = activeGguf.name
+            val sizeMB = activeGguf.length().toDouble() / (1024 * 1024)
             importedModelSize.value = "${String.format("%.2f", sizeMB)} MB"
         } else {
             isModelImported.value = false
@@ -146,7 +146,15 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
                     if (!targetDir.exists()) {
                         targetDir.mkdirs()
                     }
-                    val targetFile = File(targetDir, "bilingual_retro_tiny_q4_0.gguf")
+
+                    // Clean previous imported GGUF files to prevent conflicts
+                    targetDir.listFiles { f -> f.isFile && f.name.endsWith(".gguf") }?.forEach { f ->
+                        f.delete()
+                    }
+
+                    // Keep original extension or fallback to .gguf
+                    val safeName = if (displayName.endsWith(".gguf")) displayName else "$displayName.gguf"
+                    val targetFile = File(targetDir, safeName)
 
                     resolver.openInputStream(uri)?.use { input ->
                         FileOutputStream(targetFile).use { output ->
@@ -160,7 +168,7 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
 
                     withContext(Dispatchers.Main) {
                         isModelImported.value = true
-                        importedModelName.value = displayName
+                        importedModelName.value = safeName
                         val sizeMB = targetFile.length().toDouble() / (1024 * 1024)
                         importedModelSize.value = "${String.format("%.2f", sizeMB)} MB"
                     }
@@ -176,9 +184,9 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
     fun deleteImportedModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val context = getApplication<Application>()
-            val file = File(context.filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
-            if (file.exists()) {
-                file.delete()
+            val targetDir = File(context.filesDir, "models/stable_diffusion")
+            targetDir.listFiles { f -> f.isFile && f.name.endsWith(".gguf") }?.forEach { f ->
+                f.delete()
             }
             withContext(Dispatchers.Main) {
                 isModelImported.value = false
@@ -312,10 +320,9 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
             stopAnimationPlayback()
             try {
                 if (isLocalHDMode.value) {
-                    // Check if model exists first!
-                    val file = File(getApplication<Application>().filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
-                    if (!file.exists()) {
-                        throw Exception("الملف غير متوفر! يرجى استيراد نموذج GGUF من 'مركز النماذج' بالأسفل قبل التشغيل المحلي.")
+                    val activeGguf = localHDEngine.findAvailableGgufModel()
+                    if (activeGguf == null || !activeGguf.exists()) {
+                        throw Exception("ملف النموذج غير متوفر! يرجى استيراد ملف الـ GGUF من خلال لوحة إدارة النماذج بالأسفل أولاً.")
                     }
                     localHDEngine.generateImageIterative(
                         prompt = prompt.value,
