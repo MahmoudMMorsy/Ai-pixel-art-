@@ -2,6 +2,7 @@ package com.retro.pixelanimator.ui.viewmodel
 
 import android.app.Application
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.util.Base64
@@ -75,6 +76,13 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
 
     private val _realImageBase64 = MutableStateFlow<String?>(null)
     val realImageBase64: StateFlow<String?> = _realImageBase64.asStateFlow()
+
+    // --- Pro Pixelate & Fuse Mode (Create Image Pro) ---
+    val isProMode = MutableStateFlow(false)
+    val pickedImageUri = MutableStateFlow<Uri?>(null)
+    val proArabicText = MutableStateFlow("فارس الأسطورة ريترو")
+    val proResultBitmap = MutableStateFlow<Bitmap?>(null)
+    val proIsProcessing = MutableStateFlow(false)
 
     // --- Playback State ---
     private val _currentFrameIndex = MutableStateFlow(0)
@@ -302,6 +310,47 @@ class PixelAnimatorViewModel(application: Application) : AndroidViewModel(applic
                 startAnimationPlayback()
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "حدث خطأ غير متوقع أثناء توليد الرسوم المتحركة.")
+            }
+        }
+    }
+
+    fun setPickedImage(uri: Uri) {
+        pickedImageUri.value = uri
+        runProPixelation()
+    }
+
+    fun runProPixelation() {
+        val uri = pickedImageUri.value ?: return
+        viewModelScope.launch {
+            proIsProcessing.value = true
+            _uiState.value = UiState.Loading
+            try {
+                val bitmap = withContext(Dispatchers.IO) {
+                    val context = getApplication<Application>()
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        BitmapFactory.decodeStream(inputStream)
+                    }
+                }
+                if (bitmap != null) {
+                    val result = withContext(Dispatchers.IO) {
+                        localHDEngine.blendAndPixelateOnDevice(
+                            baseBitmap = bitmap,
+                            arabicText = proArabicText.value,
+                            size = 256,
+                            k = 48
+                        )
+                    }
+                    proResultBitmap.value = result
+                    val base64 = bitmapToBase64(result)
+                    _realImageBase64.value = base64
+                    _uiState.value = UiState.RealImageSuccess(base64)
+                } else {
+                    _uiState.value = UiState.Error("فشل تحميل الصورة المختارة")
+                }
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.localizedMessage ?: "حدث خطأ أثناء دمج وبكسلة الصورة")
+            } finally {
+                proIsProcessing.value = false
             }
         }
     }
