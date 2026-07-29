@@ -5,68 +5,81 @@ from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import numpy as np
 from tqdm import tqdm
+import json
 
 from toty_model import TotyRetroDiffusionModel
 from train import LinearNoiseSchedule
+from scrape_dataset import run_scraper
+from auto_tag_dataset import auto_tag_images
 
 class TotyImageDataset(Dataset):
     """
-    Slices the user's uploaded 512x512 test.png into 64 unique 64x64 tiles,
-    forming a rich dataset to train/fine-tune the brand-new Toty model from scratch.
+    Loads real scraped and auto-tagged NES character sprites and background images
+    from 'dataset/metadata_tagged.json' representing real visual patterns of characters like Mario, Luigi,
+    gold coins, retro knights, castle blocks, and treasure chests.
     """
-    def __init__(self, image_path="test.png", tile_size=64):
-        self.tile_size = tile_size
-        self.tiles = []
-        self.prompts = []
+    def __init__(self, metadata_path="dataset/metadata_tagged.json", img_size=64):
+        self.img_size = img_size
+        self.real_images = []
 
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Source user image '{image_path}' not found at the root!")
+        # Run scraping and auto-tagging of NES characters and backgrounds if not already present
+        if not os.path.exists(metadata_path):
+            print("🚀 Scraped metadata not found. Triggering NES characters and backgrounds scraper/tagger...")
+            run_scraper(output_dir="dataset/raw")
+            auto_tag_images(input_dir="dataset/raw", output_dir="dataset")
 
-        img = Image.open(image_path).convert("RGB")
-        w, h = img.size
-        print(f"📊 Slicing user image '{image_path}' of size {w}x{h} for the new Toty model...")
+        if os.path.exists(metadata_path):
+            try:
+                with open(metadata_path, "r", encoding="utf-8") as f:
+                    metadata = json.load(f)
 
-        cols = w // tile_size
-        rows = h // tile_size
+                for img_name, info in metadata.items():
+                    path = info["filepath"]
+                    if os.path.exists(path):
+                        self.real_images.append({
+                            "path": path,
+                            "prompt_en": info["prompt_en"],
+                            "prompt_ar": info["prompt_ar"]
+                        })
+                print(f"📊 Loaded {len(self.real_images)} real auto-tagged NES character/background images for training!")
+            except Exception as e:
+                print(f"⚠️ Warning: Failed to parse metadata file {metadata_path}: {e}")
 
-        for r in range(rows):
-            for c in range(cols):
-                box = (c * tile_size, r * tile_size, (c + 1) * tile_size, (r + 1) * tile_size)
-                tile = img.crop(box)
-                self.tiles.append(tile)
-
-                # Bilingual concept associations
-                if (r + c) % 2 == 0:
-                    self.prompts.append("فارس الأسطورة ريترو")
-                else:
-                    self.prompts.append("fantasy pixel-art knight standing in front of a majestic castle")
-
-        print(f"🎉 Successfully sliced into {len(self.tiles)} tiles for scratch training!")
+        # Fallback if empty
+        if not self.real_images:
+            raise FileNotFoundError("Could not find or synthesize any NES character/background image dataset!")
 
     def __len__(self):
-        return len(self.tiles)
+        # We can artificially repeat the dataset to have a stable epoch size
+        return max(len(self.real_images), 120)
 
     def __getitem__(self, idx):
-        tile = self.tiles[idx]
-        prompt = self.prompts[idx]
+        item = self.real_images[idx % len(self.real_images)]
+        prompt = item["prompt_ar"] if idx % 2 == 0 else item["prompt_en"]
 
-        # Convert to float32 NumPy array [-1.0, 1.0]
-        img_arr = np.array(tile).astype(np.float32) / 127.5 - 1.0
-        # Permute to PyTorch format [C, H, W]
-        img_tensor = torch.from_numpy(img_arr).permute(2, 0, 1)
+        try:
+            img = Image.open(item["path"]).convert("RGB")
+            # Resize cleanly with nearest-neighbor to retain sharp NES details
+            img = img.resize((self.img_size, self.img_size), Image.Resampling.NEAREST)
 
-        return img_tensor, prompt
+            img_arr = np.array(img).astype(np.float32) / 127.5 - 1.0
+            img_tensor = torch.from_numpy(img_arr).permute(2, 0, 1) # [3, H, W]
+            return img_tensor, prompt
+        except Exception as e:
+            # Fallback to random tensor if loading fails
+            return torch.randn(3, self.img_size, self.img_size), "فارس الأسطورة ريترو"
 
 def train_toty_model(epochs=15, batch_size=8, lr=1e-3, save_path="toty_raw.pth"):
-    print("================================================================")
+    print("==================================================================")
     print("   Training Brand-New Toty Image Generation Model from Scratch")
-    print("================================================================")
+    print("      Target: Real NES Game Characters and Backgrounds")
+    print("==================================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device being used: {device}")
 
-    # Load custom dataset
-    dataset = TotyImageDataset(image_path="test.png", tile_size=64)
+    # Load real custom NES characters/backgrounds dataset
+    dataset = TotyImageDataset(metadata_path="dataset/metadata_tagged.json", img_size=64)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     # Initialize Toty model from scratch
@@ -108,7 +121,7 @@ def train_toty_model(epochs=15, batch_size=8, lr=1e-3, save_path="toty_raw.pth")
 
     print(f"\nSaving brand-new scratch-trained weights to: {save_path}")
     torch.save(model.state_dict(), save_path)
-    print("🎉 New model scratch training completed successfully!")
+    print("🎉 New model scratch training on NES characters completed successfully!")
 
 if __name__ == "__main__":
     train_toty_model(epochs=15, batch_size=8, lr=1e-3)
