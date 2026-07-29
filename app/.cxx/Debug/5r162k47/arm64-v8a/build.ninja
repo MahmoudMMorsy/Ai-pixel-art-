@@ -52,7 +52,7 @@ build cmake_object_order_depends_target_stable_diffusion_jni: phony || CMakeFile
 build CMakeFiles/stable_diffusion_jni.dir/stable_diffusion_jni.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/app/src/main/cpp/stable_diffusion_jni.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/stable_diffusion_jni.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir
@@ -63,7 +63,7 @@ build CMakeFiles/stable_diffusion_jni.dir/stable_diffusion_jni.cpp.o: CXX_COMPIL
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/stable-diffusion.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/stable-diffusion.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/stable-diffusion.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src
@@ -74,7 +74,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/stable-di
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/upscaler.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/upscaler.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/upscaler.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src
@@ -85,7 +85,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/upscaler.
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenizer.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/tokenizers/tokenizer.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenizer.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers
@@ -96,7 +96,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizer
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenize_util.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/tokenizers/tokenize_util.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenize_util.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers
@@ -107,7 +107,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizer
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/vocab/vocab.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/tokenizers/vocab/vocab.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/vocab/vocab.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/vocab
@@ -118,7 +118,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizer
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/mistral_tokenizer.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/tokenizers/mistral_tokenizer.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/mistral_tokenizer.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers
@@ -129,7 +129,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizer
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/qwen2_tokenizer.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/tokenizers/qwen2_tokenizer.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/qwen2_tokenizer.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers
@@ -140,7 +140,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizer
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/t5_unigram_tokenizer.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/tokenizers/t5_unigram_tokenizer.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/t5_unigram_tokenizer.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers
@@ -151,7 +151,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizer
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/version.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/src/version.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/version.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src
@@ -162,7 +162,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/version.c
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml.c.o: C_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/ggml/src/ggml.c || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml.c.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src
@@ -173,7 +173,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml-alloc.c.o: C_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/ggml/src/ggml-alloc.c || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml-alloc.c.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src
@@ -184,7 +184,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml-backend.cpp.o: CXX_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/ggml/src/ggml-backend.cpp || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml-backend.cpp.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src
@@ -195,7 +195,7 @@ build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml
 build CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml-quants.c.o: C_COMPILER__stable_diffusion_jni_Debug /app/stable-diffusion.cpp/ggml/src/ggml-quants.c || cmake_object_order_depends_target_stable_diffusion_jni
   DEFINES = -DGGML_MAX_NAME=128 -Dstable_diffusion_jni_EXPORTS
   DEP_FILE = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src/ggml-quants.c.o.d
-  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC
+  FLAGS = -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -O1 -g0
   INCLUDES = -I/app/stable-diffusion.cpp -I/app/stable-diffusion.cpp/src -I/app/stable-diffusion.cpp/include -I/app/stable-diffusion.cpp/ggml/include -I/app/stable-diffusion.cpp/ggml/src -I/app/stable-diffusion.cpp/thirdparty -I/app/stable-diffusion.cpp/thirdparty/libwebp/src
   OBJECT_DIR = CMakeFiles/stable_diffusion_jni.dir
   OBJECT_FILE_DIR = CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/ggml/src

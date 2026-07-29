@@ -12,6 +12,9 @@ set(CMAKE_JOB_POOL_COMPILE compile_job_pool)
 # Add GGML_MAX_NAME compile definition
 add_compile_definitions(GGML_MAX_NAME=128)
 
+# Reduce compiler memory usage dramatically by lowering optimization and disabling debug info
+add_compile_options(-O1 -g0)
+
 # Standard includes for stable-diffusion.cpp and ggml
 include_directories(
     "${SD_CPP_DIR}"
