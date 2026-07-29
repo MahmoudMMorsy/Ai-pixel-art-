@@ -2,6 +2,9 @@ package com.retro.pixelanimator.engine
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import com.google.mediapipe.framework.image.BitmapExtractor
 import com.google.mediapipe.tasks.vision.imagegenerator.ImageGenerator
 import com.google.mediapipe.tasks.vision.imagegenerator.ImageGenerator.ImageGeneratorOptions
@@ -284,6 +287,168 @@ class LocalHDImageEngine(private val context: Context) {
         } catch (e: Exception) {
             throw Exception("خطأ أثناء عملية التوليد من $architecture: ${e.localizedMessage}")
         }
+    }
+
+    /**
+     * Blends the base image with an artistic retro-gradient theme,
+     * pixelates it to exactly 256x256 chunky blocks, reduces it to exactly 48 colors
+     * using on-device K-Means clustering, and draws high-contrast RTL Arabic text.
+     */
+    fun blendAndPixelateOnDevice(
+        baseBitmap: Bitmap,
+        arabicText: String?,
+        size: Int = 256,
+        k: Int = 48
+    ): Bitmap {
+        // 1. Create Synthwave Gradient Overlay
+        val widthOrig = baseBitmap.width
+        val heightOrig = baseBitmap.height
+        val gradientBitmap = Bitmap.createBitmap(widthOrig, heightOrig, Bitmap.Config.ARGB_8888)
+        val gradCanvas = Canvas(gradientBitmap)
+        val gradPaint = Paint()
+        for (y in 0 until heightOrig) {
+            val ratio = y.toFloat() / heightOrig
+            val r = (255 - ratio * 150).toInt().coerceIn(0, 255)
+            val g = (ratio * 180).toInt().coerceIn(0, 255)
+            val b = (200 + ratio * 55).toInt().coerceIn(0, 255)
+            gradPaint.color = (0xFF shl 24) or (r shl 16) or (g shl 8) or b
+            gradCanvas.drawLine(0f, y.toFloat(), widthOrig.toFloat(), y.toFloat(), gradPaint)
+        }
+
+        // Blend base image with 35% synthwave gradient
+        val blendedBitmap = Bitmap.createBitmap(widthOrig, heightOrig, Bitmap.Config.ARGB_8888)
+        val blendCanvas = Canvas(blendedBitmap)
+        blendCanvas.drawBitmap(baseBitmap, 0f, 0f, null)
+        val blendPaint = Paint().apply {
+            alpha = (0.35f * 255).toInt()
+        }
+        blendCanvas.drawBitmap(gradientBitmap, 0f, 0f, blendPaint)
+
+        // 2. Downsample smoothly to exactly 256x256 chunky blocks
+        val scaledBitmap = Bitmap.createScaledBitmap(blendedBitmap, size, size, true)
+
+        // 3. K-Means Quantization to exactly 48 colors (for clearer retro features)
+        val pixels = IntArray(size * size)
+        scaledBitmap.getPixels(pixels, 0, size, 0, 0, size, size)
+
+        val pixelColors = Array(pixels.size) { FloatArray(3) }
+        for (i in pixels.indices) {
+            val color = pixels[i]
+            pixelColors[i][0] = ((color shr 16) and 0xFF).toFloat()
+            pixelColors[i][1] = ((color shr 8) and 0xFF).toFloat()
+            pixelColors[i][2] = (color and 0xFF).toFloat()
+        }
+
+        // Extract unique colors to initialize unique centroids
+        val uniqueColors = pixelColors.distinctBy { it[0].toInt() shl 16 or (it[1].toInt() shl 8) or it[2].toInt() }
+        val centroids = Array(k) { FloatArray(3) }
+        val random = java.util.Random(42)
+
+        if (uniqueColors.size < k) {
+            for (i in 0 until k) {
+                val source = uniqueColors.getOrNull(i % uniqueColors.size) ?: floatArrayOf(0f, 0f, 0f)
+                centroids[i] = source.clone()
+            }
+        } else {
+            val chosenIndices = mutableSetOf<Int>()
+            for (i in 0 until k) {
+                var idx = random.nextInt(uniqueColors.size)
+                while (chosenIndices.contains(idx)) {
+                    idx = random.nextInt(uniqueColors.size)
+                }
+                chosenIndices.add(idx)
+                centroids[i] = uniqueColors[idx].clone()
+            }
+        }
+
+        val labels = IntArray(pixels.size)
+        val iterations = 8 // fast and extremely accurate for 256x256
+        for (iter in 0 until iterations) {
+            // Assign pixels to closest centroid
+            for (i in pixels.indices) {
+                val p = pixelColors[i]
+                var minDist = Float.MAX_VALUE
+                var minLabel = 0
+                for (j in 0 until k) {
+                    val c = centroids[j]
+                    val dx = p[0] - c[0]
+                    val dy = p[1] - c[1]
+                    val dz = p[2] - c[2]
+                    val dist = dx*dx + dy*dy + dz*dz
+                    if (dist < minDist) {
+                        minDist = dist
+                        minLabel = j
+                    }
+                }
+                labels[i] = minLabel
+            }
+
+            // Calculate new centroids
+            val sum = Array(k) { FloatArray(3) }
+            val count = IntArray(k)
+            for (i in pixels.indices) {
+                val label = labels[i]
+                val p = pixelColors[i]
+                sum[label][0] += p[0]
+                sum[label][1] += p[1]
+                sum[label][2] += p[2]
+                count[label]++
+            }
+
+            for (j in 0 until k) {
+                if (count[j] > 0) {
+                    centroids[j][0] = sum[j][0] / count[j]
+                    centroids[j][1] = sum[j][1] / count[j]
+                    centroids[j][2] = sum[j][2] / count[j]
+                }
+            }
+        }
+
+        // Reconstruct image with quantized pixels
+        val quantizedPixels = IntArray(pixels.size)
+        for (i in pixels.indices) {
+            val c = centroids[labels[i]]
+            val r = c[0].coerceIn(0f, 255f).toInt()
+            val g = c[1].coerceIn(0f, 255f).toInt()
+            val b = c[2].coerceIn(0f, 255f).toInt()
+            quantizedPixels[i] = (0xFF shl 24) or (r shl 16) or (g shl 8) or b
+        }
+
+        val quantizedBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        quantizedBitmap.setPixels(quantizedPixels, 0, size, 0, 0, size, size)
+
+        // 4. Upscale with NEAREST-NEIGHBOR to exactly 512x512 so it's super sharp
+        val finalBitmap = Bitmap.createScaledBitmap(quantizedBitmap, 512, 512, false)
+
+        // 5. Draw Arabic Text Overlay at the bottom center
+        if (!arabicText.isNullOrBlank()) {
+            val finalCanvas = Canvas(finalBitmap)
+            val textPaint = Paint().apply {
+                isAntiAlias = true
+                color = android.graphics.Color.parseColor("#FFDC64") // Neon golden
+                textSize = 40f
+                textAlign = Paint.Align.CENTER
+                try {
+                    typeface = Typeface.createFromAsset(context.assets, "fonts/NotoNaskhArabic-Regular.ttf")
+                } catch (e: Exception) {
+                    typeface = Typeface.DEFAULT_BOLD
+                }
+            }
+
+            val x = 256f // Center of 512f
+            val y = 430f // Bottom third
+
+            // High-contrast dark outline
+            val outlinePaint = Paint(textPaint).apply {
+                color = android.graphics.Color.parseColor("#0F0A19")
+                style = Paint.Style.STROKE
+                strokeWidth = 6f
+            }
+            finalCanvas.drawText(arabicText, x, y, outlinePaint)
+            finalCanvas.drawText(arabicText, x, y, textPaint)
+        }
+
+        return finalBitmap
     }
 
     fun close() {

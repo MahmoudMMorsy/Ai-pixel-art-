@@ -62,6 +62,11 @@ fun PixelLabScreen(
     val selectedHDModel by viewModel.selectedHDModel.collectAsState()
     val realImageBase64 by viewModel.realImageBase64.collectAsState()
 
+    val isProModeState by viewModel.isProMode.collectAsState()
+    val pickedImageUriState by viewModel.pickedImageUri.collectAsState()
+    val proArabicTextState by viewModel.proArabicText.collectAsState()
+    val proIsProcessingState by viewModel.proIsProcessing.collectAsState()
+
     // Sideload model states
     val isModelImported by viewModel.isModelImported.collectAsState()
     val importedModelName by viewModel.importedModelName.collectAsState()
@@ -112,6 +117,15 @@ fun PixelLabScreen(
             Color(android.graphics.Color.parseColor(hexColor))
         } catch (e: Exception) {
             Color.Transparent
+        }
+    }
+
+    fun decodeBase64ToBitmap(base64Str: String): android.graphics.Bitmap? {
+        return try {
+            val decodedBytes = android.util.Base64.decode(base64Str, android.util.Base64.DEFAULT)
+            android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -200,134 +214,180 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 2. Model Center (مركز النماذج) for Import & Status Info ---
+        // --- 1.5 Arcade-style Premium Tab Bar ---
         item {
-            Card(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        width = 1.5.dp,
-                        color = if (isModelImported) Color(0xFF00FFCC).copy(alpha = 0.6f) else Color(0xFFFF3366).copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
-                shape = RoundedCornerShape(16.dp)
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // Button 1: Standard Animation
+                Button(
+                    onClick = { viewModel.isProMode.value = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (!isProModeState) Color(0xFFFF007F) else Color(0xFF141424)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f).border(1.dp, if (!isProModeState) Color.White else Color(0xFF24243C), RoundedCornerShape(10.dp))
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Text(
+                        text = "🎮 أنيميشن ريترو",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Button 2: Create Image Pro
+                Button(
+                    onClick = { viewModel.isProMode.value = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isProModeState) Color(0xFF00F0FF) else Color(0xFF141424)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.weight(1f).border(1.dp, if (isProModeState) Color.White else Color(0xFF24243C), RoundedCornerShape(10.dp))
+                ) {
+                    Text(
+                        text = "✨ دمج وبكسلة برو",
+                        color = if (isProModeState) Color.Black else Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // --- 2. Model Center (مركز النماذج) for Import & Status Info ---
+        if (!isProModeState) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.5.dp,
+                            color = if (isModelImported) Color(0xFF00FFCC).copy(alpha = 0.6f) else Color(0xFFFF3366).copy(alpha = 0.6f),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF3366)
-                        )
-                        Text(
-                            text = "مركز إدارة النماذج المحلية ✦ MODEL CENTER",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-
-                    Divider(color = Color(0xFF24243C))
-
-                    if (isImporting) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            CircularProgressIndicator(color = Color(0xFF00F0FF), modifier = Modifier.size(28.dp))
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = if (isModelImported) Color(0xFF00FFCC) else Color(0xFFFF3366)
+                            )
                             Text(
-                                text = "جاري استيراد وتهيئة ملف الـ GGUF محلياً... يرجى الانتظار",
-                                color = Color(0xFF00F0FF),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
+                                text = "مركز إدارة النماذج المحلية ✦ MODEL CENTER",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                         }
-                    } else {
-                        if (isModelImported) {
+
+                        HorizontalDivider(color = Color(0xFF24243C))
+
+                        if (isImporting) {
                             Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("اسم النموذج:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
-                                    Text(importedModelName ?: "غير معروف", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("حجم الملف:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
-                                    Text(importedModelSize ?: "0 MB", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("حالة التشغيل:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
-                                    Text("جاهز ومكتمل (Offline Ready)", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Button(
-                                    onClick = { viewModel.deleteImportedModel() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3366)),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("حذف النموذج المستورد وتحرير المساحة", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
+                                CircularProgressIndicator(color = Color(0xFF00F0FF), modifier = Modifier.size(28.dp))
+                                Text(
+                                    text = "جاري استيراد وتهيئة ملف الـ GGUF محلياً... يرجى الانتظار",
+                                    color = Color(0xFF00F0FF),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         } else {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "التطبيق خفيف وحر! لم يتم تجميع أي نموذج ضخم بداخله. يرجى استيراد أي نموذج GGUF خاص بك لتفعيل التوليد الذكي بالكامل محلياً بدون إنترنت.",
-                                    color = Color(0xFFFFD700),
-                                    fontSize = 11.sp,
-                                    textAlign = TextAlign.Center
-                                )
-
-                                Button(
-                                    onClick = { modelPickerLauncher.launch("*/*") },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FFCC)),
+                            if (isModelImported) {
+                                Column(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("استيراد نموذج GGUF من جهازك", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("اسم النموذج:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                        Text(importedModelName ?: "غير معروف", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("حجم الملف:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                        Text(importedModelSize ?: "0 MB", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("حالة التشغيل:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                        Text("جاهز ومكتمل (Offline Ready)", color = Color(0xFF00FFCC), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Button(
+                                        onClick = { viewModel.deleteImportedModel() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3366)),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("حذف النموذج المستورد وتحرير المساحة", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            } else {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "التطبيق خفيف وحر! لم يتم تجميع أي نموذج ضخم بداخله. يرجى استيراد أي نموذج GGUF خاص بك لتفعيل التوليد الذكي بالكامل محلياً بدون إنترنت.",
+                                        color = Color(0xFFFFD700),
+                                        fontSize = 11.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                    Button(
+                                        onClick = { modelPickerLauncher.launch("*/*") },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FFCC)),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("استيراد نموذج GGUF من جهازك", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    importError?.let { err ->
-                        Text(
-                            text = err,
-                            color = Color(0xFFFF3366),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
-                        )
+                        importError?.let { err ->
+                            Text(
+                                text = err,
+                                color = Color(0xFFFF3366),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -346,7 +406,7 @@ fun PixelLabScreen(
                     .fillMaxWidth()
                     .border(
                         width = 2.dp,
-                        color = Color(0xFF00F0FF).copy(alpha = glowAlpha),
+                        color = if (isProModeState) Color(0xFF00F0FF).copy(alpha = glowAlpha) else Color(0xFFFF007F).copy(alpha = glowAlpha),
                         shape = RoundedCornerShape(16.dp)
                     ),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF10101C)),
@@ -357,8 +417,8 @@ fun PixelLabScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "شاشة التوليد الكلاسيكية ✦ CRT MONITOR",
-                        color = Color(0xFF00F0FF),
+                        text = if (isProModeState) "شاشة دمج وبلورة بكسل برو ✦ PRO DISPLAY" else "شاشة التوليد الكلاسيكية ✦ CRT MONITOR",
+                        color = if (isProModeState) Color(0xFF00F0FF) else Color(0xFFFF007F),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
@@ -372,7 +432,7 @@ fun PixelLabScreen(
                             .size(240.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.Black)
-                            .border(3.dp, Color(0xFF00F0FF), RoundedCornerShape(12.dp))
+                            .border(3.dp, if (isProModeState) Color(0xFF00F0FF) else Color(0xFFFF007F), RoundedCornerShape(12.dp))
                             .drawWithContent {
                                 drawContent()
                                 // Simulate CRT Retro Scanlines Overlay
@@ -391,38 +451,57 @@ fun PixelLabScreen(
                             }
                             .testTag("pixel_canvas")
                     ) {
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            val cellSize = size.width / 16f
-                            for (row in 0 until 16) {
-                                for (col in 0 until 16) {
-                                    val charIdx = row * 16 + col
-                                    val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
-                                    val cellColor = getColorForChar(char, palette)
-
-                                    drawRect(
-                                        color = cellColor,
-                                        topLeft = Offset(col * cellSize, row * cellSize),
-                                        size = androidx.compose.ui.geometry.Size(cellSize + 0.5f, cellSize + 0.5f)
-                                    )
+                        if (isProModeState) {
+                            // Decode base64 or display proResultBitmap
+                            val resultBmp = viewModel.proResultBitmap.collectAsState().value
+                            if (resultBmp != null) {
+                                androidx.compose.foundation.Image(
+                                    bitmap = resultBmp.asImageBitmap(),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFF8A8A9E), modifier = Modifier.size(32.dp))
+                                        Text("شاشة جاهزة لبدء المعالجة ✦ READY", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                    }
                                 }
                             }
+                        } else {
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val cellSize = size.width / 16f
+                                for (row in 0 until 16) {
+                                    for (col in 0 until 16) {
+                                        val charIdx = row * 16 + col
+                                        val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
+                                        val cellColor = getColorForChar(char, palette)
 
-                            // Subtle retro grid lines
-                            if (showGridLines) {
-                                for (i in 1 until 16) {
-                                    val offset = i * cellSize
-                                    drawLine(
-                                        color = Color.White.copy(alpha = 0.08f),
-                                        start = Offset(offset, 0f),
-                                        end = Offset(offset, size.height),
-                                        strokeWidth = 1f
-                                    )
-                                    drawLine(
-                                        color = Color.White.copy(alpha = 0.08f),
-                                        start = Offset(0f, offset),
-                                        end = Offset(size.width, offset),
-                                        strokeWidth = 1f
-                                    )
+                                        drawRect(
+                                            color = cellColor,
+                                            topLeft = Offset(col * cellSize, row * cellSize),
+                                            size = androidx.compose.ui.geometry.Size(cellSize + 0.5f, cellSize + 0.5f)
+                                        )
+                                    }
+                                }
+
+                                // Subtle retro grid lines
+                                if (showGridLines) {
+                                    for (i in 1 until 16) {
+                                        val offset = i * cellSize
+                                        drawLine(
+                                            color = Color.White.copy(alpha = 0.08f),
+                                            start = Offset(offset, 0f),
+                                            end = Offset(offset, size.height),
+                                            strokeWidth = 1f
+                                        )
+                                        drawLine(
+                                            color = Color.White.copy(alpha = 0.08f),
+                                            start = Offset(0f, offset),
+                                            end = Offset(size.width, offset),
+                                            strokeWidth = 1f
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -449,238 +528,377 @@ fun PixelLabScreen(
                                 checked = showGridLines,
                                 onCheckedChange = { showGridLines = it },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color(0xFF00F0FF),
-                                    checkedTrackColor = Color(0xFF00F0FF).copy(alpha = 0.3f)
+                                    checkedThumbColor = if (isProModeState) Color(0xFF00F0FF) else Color(0xFFFF007F),
+                                    checkedTrackColor = (if (isProModeState) Color(0xFF00F0FF) else Color(0xFFFF007F)).copy(alpha = 0.3f)
                                 )
                             )
                         }
 
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF1B1B30),
-                        ) {
-                            Text(
-                                text = "فريم: ${activeFrameIndex + 1} / ${frames.size}",
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- 4. NES Console Controller (D-Pad & Buttons) ---
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, Color(0xFFFF007F).copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "جهاز التحكم ✦ FAMICOM CONTROLLER",
-                        color = Color(0xFFFF007F),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Classic D-Pad Style Controls (Left/Right)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = {
-                                    viewModel.stopAnimationPlayback()
-                                    viewModel.setCurrentFrameIndex((currentFrameIndex - 1).coerceAtLeast(0))
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
-                                contentPadding = PaddingValues(0.dp),
-                                modifier = Modifier.size(44.dp),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "السابق", tint = Color.White)
-                            }
-
-                            Text(
-                                text = "D-PAD",
-                                color = Color(0xFF8A8A9E),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            Button(
-                                onClick = {
-                                    viewModel.stopAnimationPlayback()
-                                    viewModel.setCurrentFrameIndex(currentFrameIndex + 1)
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
-                                contentPadding = PaddingValues(0.dp),
-                                modifier = Modifier.size(44.dp),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Icon(Icons.Default.ArrowForward, contentDescription = "التالي", tint = Color.White)
-                            }
-                        }
-
-                        // Play/Pause Action Buttons
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Button(
-                                    onClick = { viewModel.togglePlayback() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF007F)),
-                                    modifier = Modifier.size(48.dp),
-                                    shape = RoundedCornerShape(50)
-                                ) {
-                                    Text(
-                                        text = if (isPlaying) "❚❚" else "▶",
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Black
-                                    )
-                                }
-                                Text("A-START", color = Color(0xFFFF007F), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-                            }
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Button(
-                                    onClick = { viewModel.stopAnimationPlayback() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00F0FF)),
-                                    modifier = Modifier.size(48.dp),
-                                    shape = RoundedCornerShape(50)
-                                ) {
-                                    Icon(Icons.Default.Close, contentDescription = "توقف", tint = Color.Black)
-                                }
-                                Text("B-STOP", color = Color(0xFF00F0FF), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- 5. Inputs & Bilingual Prompts config ---
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "لوحة التوجيه الثنائية ✦ LANGUAGE CENTER",
-                        color = Color(0xFF00F0FF),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    OutlinedTextField(
-                        value = promptState,
-                        onValueChange = { viewModel.prompt.value = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("prompt_input_field"),
-                        label = { Text("اكتب وصف اللعبة باللغة العربية أو الإنجليزية", color = Color(0xFF8A8A9E)) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF00F0FF),
-                            unfocusedBorderColor = Color(0xFF24243C),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-
-                    // Presets
-                    Text(
-                        text = "عناصر مجهزة سريعة ✦ QUICK PRESETS:",
-                        color = Color(0xFF8A8A9E),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        bilingualRetroRecipes.forEach { (label, fullPrompt) ->
+                        if (!isProModeState) {
                             Surface(
-                                modifier = Modifier.clickable {
-                                    viewModel.prompt.value = fullPrompt
-                                    Toast.makeText(context, "تم اختيار: $label", Toast.LENGTH_SHORT).show()
-                                },
                                 shape = RoundedCornerShape(8.dp),
-                                color = Color(0xFF1D1D35),
-                                border = BorderStroke(1.dp, Color(0xFF00F0FF).copy(alpha = 0.2f))
+                                color = Color(0xFF1B1B30),
                             ) {
                                 Text(
-                                    text = label,
+                                    text = "فريم: ${activeFrameIndex + 1} / ${frames.size}",
                                     color = Color.White,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        } else {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFF1B1B30),
+                            ) {
+                                Text(
+                                    text = "دقة: 256×256 (48 لون)",
+                                    color = Color(0xFF00F0FF),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                 )
                             }
                         }
                     }
+                }
+            }
+        }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Generation button
-                    Button(
-                        onClick = { viewModel.generatePixelArt() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .testTag("generate_button"),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        contentPadding = PaddingValues(0.dp)
+        if (isProModeState) {
+            // --- Premium Create Image Pro Controls ---
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFF00F0FF).copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(Color(0xFFFF007F), Color(0xFF00F0FF))
-                                    ),
-                                    shape = RoundedCornerShape(12.dp)
-                                ),
-                            contentAlignment = Alignment.Center
+                        Text(
+                            text = "بوابة الدمج وبكسلة الصور الاحترافية ✦ CREATE IMAGE PRO",
+                            color = Color(0xFF00F0FF),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        HorizontalDivider(color = Color(0xFF24243C))
+
+                        // Image Picker Button
+                        val galleryLauncher = rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.GetContent()
+                        ) { uri: Uri? ->
+                            if (uri != null) {
+                                viewModel.setPickedImage(uri)
+                            }
+                        }
+
+                        Button(
+                            onClick = { galleryLauncher.launch("image/*") },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FFCC)),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            if (uiState is UiState.Loading) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            } else {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("اختر صورة من المعرض للدمج والبكسلة", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        // Display selected URI or status
+                        if (pickedImageUriState != null) {
+                            Text(
+                                text = "تم اختيار الصورة بنجاح! جاهز للمعالجة.",
+                                color = Color(0xFF00FFCC),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        } else {
+                            Text(
+                                text = "يرجى اختيار صورة للبدء في تحويلها لـ 256×256 بكسل و 48 لوناً",
+                                color = Color(0xFF8A8A9E),
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        // Text Field for Arabic Overlay
+                        OutlinedTextField(
+                            value = proArabicTextState,
+                            onValueChange = { viewModel.proArabicText.value = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("اكتب النص العربي لدمجه بالأسفل", color = Color(0xFF8A8A9E)) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF00F0FF),
+                                unfocusedBorderColor = Color(0xFF24243C),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+
+                        // Action Button
+                        Button(
+                            onClick = { viewModel.runProPixelation() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            contentPadding = PaddingValues(0.dp),
+                            enabled = pickedImageUriState != null
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = if (pickedImageUriState != null) listOf(Color(0xFF00F0FF), Color(0xFFFF007F)) else listOf(Color(0xFF24243C), Color(0xFF24243C))
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (proIsProcessingState) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                                } else {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(Icons.Default.Star, contentDescription = null, tint = Color.White)
+                                        Text(
+                                            text = "ابدأ المعالجة والبكسلة الفورية ✦ RENDER",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!isProModeState) {
+            // --- 4. NES Console Controller (D-Pad & Buttons) ---
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFFFF007F).copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "جهاز التحكم ✦ FAMICOM CONTROLLER",
+                            color = Color(0xFFFF007F),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Classic D-Pad Style Controls (Left/Right)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        viewModel.stopAnimationPlayback()
+                                        viewModel.setCurrentFrameIndex((currentFrameIndex - 1).coerceAtLeast(0))
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
+                                    contentPadding = PaddingValues(0.dp),
+                                    modifier = Modifier.size(44.dp),
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Icon(Icons.Default.Star, contentDescription = null, tint = Color.White)
+                                    Icon(Icons.Default.ArrowBack, contentDescription = "السابق", tint = Color.White)
+                                }
+
+                                Text(
+                                    text = "D-PAD",
+                                    color = Color(0xFF8A8A9E),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Button(
+                                    onClick = {
+                                        viewModel.stopAnimationPlayback()
+                                        viewModel.setCurrentFrameIndex(currentFrameIndex + 1)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
+                                    contentPadding = PaddingValues(0.dp),
+                                    modifier = Modifier.size(44.dp),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Icon(Icons.Default.ArrowForward, contentDescription = "التالي", tint = Color.White)
+                                }
+                            }
+
+                            // Play/Pause Action Buttons
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Button(
+                                        onClick = { viewModel.togglePlayback() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF007F)),
+                                        modifier = Modifier.size(48.dp),
+                                        shape = RoundedCornerShape(50)
+                                    ) {
+                                        Text(
+                                            text = if (isPlaying) "❚❚" else "▶",
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Black
+                                        )
+                                    }
+                                    Text("A-START", color = Color(0xFFFF007F), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                                }
+
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Button(
+                                        onClick = { viewModel.stopAnimationPlayback() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00F0FF)),
+                                        modifier = Modifier.size(48.dp),
+                                        shape = RoundedCornerShape(50)
+                                    ) {
+                                        Icon(Icons.Default.Close, contentDescription = "توقف", tint = Color.Black)
+                                    }
+                                    Text("B-STOP", color = Color(0xFF00F0FF), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- 5. Inputs & Bilingual Prompts config ---
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "لوحة التوجيه الثنائية ✦ LANGUAGE CENTER",
+                            color = Color(0xFF00F0FF),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        OutlinedTextField(
+                            value = promptState,
+                            onValueChange = { viewModel.prompt.value = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("prompt_input_field"),
+                            label = { Text("اكتب وصف اللعبة باللغة العربية أو الإنجليزية", color = Color(0xFF8A8A9E)) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF00F0FF),
+                                unfocusedBorderColor = Color(0xFF24243C),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+
+                        // Presets
+                        Text(
+                            text = "عناصر مجهزة سريعة ✦ QUICK PRESETS:",
+                            color = Color(0xFF8A8A9E),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            bilingualRetroRecipes.forEach { (label, fullPrompt) ->
+                                Surface(
+                                    modifier = Modifier.clickable {
+                                        viewModel.prompt.value = fullPrompt
+                                        Toast.makeText(context, "تم اختيار: $label", Toast.LENGTH_SHORT).show()
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF1D1D35),
+                                    border = BorderStroke(1.dp, Color(0xFF00F0FF).copy(alpha = 0.2f))
+                                ) {
                                     Text(
-                                        text = "توليد صورة ريترو فخمة ✦ GENERATE",
+                                        text = label,
                                         color = Color.White,
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
                                     )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Generation button
+                        Button(
+                            onClick = { viewModel.generatePixelArt() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .testTag("generate_button"),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(Color(0xFFFF007F), Color(0xFF00F0FF))
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (uiState is UiState.Loading) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                                } else {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(Icons.Default.Star, contentDescription = null, tint = Color.White)
+                                        Text(
+                                            text = "توليد صورة ريترو فخمة ✦ GENERATE",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp
+                                        )
+                                    }
                                 }
                             }
                         }
