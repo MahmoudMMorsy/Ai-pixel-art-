@@ -18,14 +18,16 @@ import kotlinx.coroutines.withContext
  */
 class LocalHDImageEngine(private val context: Context) {
 
+    private var jniLoadError: String? = null
+
     // Load the native compiled stable-diffusion.cpp JNI wrapper
-    companion object {
-        init {
-            try {
-                System.loadLibrary("stable_diffusion_jni")
-            } catch (e: UnsatisfiedLinkError) {
-                // If running in environment without compiled binary, log and skip
-            }
+    init {
+        try {
+            System.loadLibrary("stable_diffusion_jni")
+        } catch (e: UnsatisfiedLinkError) {
+            jniLoadError = "فشل تحميل مكتبة الـ JNI: ${e.localizedMessage}"
+        } catch (e: Exception) {
+            jniLoadError = "خطأ غير متوقع أثناء تحميل المكتبة: ${e.localizedMessage}"
         }
     }
 
@@ -56,12 +58,28 @@ class LocalHDImageEngine(private val context: Context) {
     }
 
     /**
+     * Looks up any available GGUF model in the local models/stable_diffusion/ directory.
+     */
+    fun findAvailableGgufModel(): File? {
+        val targetDir = File(context.filesDir, "models/stable_diffusion")
+        if (targetDir.exists() && targetDir.isDirectory) {
+            val files = targetDir.listFiles { file -> file.isFile && file.name.endsWith(".gguf") }
+            if (files != null && files.isNotEmpty()) {
+                // Return the first GGUF file found
+                return files[0]
+            }
+        }
+        return null
+    }
+
+    /**
      * Copies the GGUF model from assets to internal storage if not already extracted.
      */
     private fun extractModelFromAssetsIfNecessary() {
-        val targetFile = File(context.filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
-        if (!targetFile.exists()) {
-            targetFile.parentFile?.mkdirs()
+        val targetDir = File(context.filesDir, "models/stable_diffusion")
+        val targetFile = File(targetDir, "bilingual_retro_tiny_q4_0.gguf")
+        if (!targetFile.exists() && findAvailableGgufModel() == null) {
+            targetDir.mkdirs()
             try {
                 context.assets.open("models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf").use { input ->
                     targetFile.outputStream().use { output ->
@@ -69,7 +87,7 @@ class LocalHDImageEngine(private val context: Context) {
                     }
                 }
             } catch (e: Exception) {
-                // If asset doesn't exist, we fall back to standard download folders or warning
+                // If asset doesn't exist, we fall back gracefully
             }
         }
     }
@@ -83,25 +101,31 @@ class LocalHDImageEngine(private val context: Context) {
         // Close previous if architecture changed
         if (imageGenerator != null) close()
 
+        if (jniLoadError != null) {
+            throw Exception(jniLoadError)
+        }
+
         extractModelFromAssetsIfNecessary()
 
         val modelPath = getModelPath(architecture)
         val modelDir = File(modelPath)
 
-        // If local assets were extracted, we verify or mock the model engine setup
-        val targetFile = File(context.filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
-        val modelFileExists = targetFile.exists()
+        val activeGgufFile = findAvailableGgufModel()
+        val modelFileExists = activeGgufFile != null && activeGgufFile.exists()
 
-        if (!targetFile.exists() && (!modelDir.exists() || !modelDir.isDirectory)) {
+        if (!modelFileExists && (!modelDir.exists() || !modelDir.isDirectory)) {
             val modelName = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) "Flux.1" else "Stable Diffusion"
-            throw Exception("ملفات نموذج $modelName غير موجودة في: $modelPath")
+            throw Exception("ملفات نموذج $modelName غير موجودة في: $modelPath. يرجى استيراد ملف GGUF من لوحة التحكم بالأسفل أولاً.")
         }
 
         try {
-            if (modelFileExists) {
+            if (modelFileExists && activeGgufFile != null) {
                 // Natively initialize and load the GGUF model via our compiled stable-diffusion.cpp JNI wrapper
                 if (modelCtxPointer == 0L) {
-                    modelCtxPointer = initModel(targetFile.absolutePath)
+                    modelCtxPointer = initModel(activeGgufFile.absolutePath)
+                }
+                if (modelCtxPointer == 0L) {
+                    throw Exception("فشل تحميل الموديل: ملف GGUF غير متوافق أو تالف.")
                 }
                 currentArchitecture = architecture
             } else {
@@ -123,8 +147,7 @@ class LocalHDImageEngine(private val context: Context) {
             }
         } catch (e: Exception) {
             if (modelFileExists) {
-                // If JNI compilation is not fully linked yet, we gracefully configure fallback flag
-                currentArchitecture = architecture
+                throw Exception("فشل بدء تشغيل محرك C++ JNI: ${e.localizedMessage}")
             } else {
                 throw Exception("فشل بدء تشغيل محرك ${architecture.name}: ${e.localizedMessage}")
             }
@@ -178,7 +201,7 @@ class LocalHDImageEngine(private val context: Context) {
         seed: Int = (0..Int.MAX_VALUE).random()
     ): Flow<Bitmap> = flow {
         initialize(architecture)
-        val targetFile = File(context.filesDir, "models/stable_diffusion/bilingual_retro_tiny_q4_0.gguf")
+        val activeGgufFile = findAvailableGgufModel()
 
         val effectiveIterations = if (architecture == ModelArchitecture.FLUX_1_SCHNELL) {
             iterations.coerceAtMost(4)
@@ -194,14 +217,9 @@ class LocalHDImageEngine(private val context: Context) {
                 bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbData))
                 emit(bitmap)
                 return@flow
+            } else {
+                throw Exception("فشل التوليد: فشل مفسر C++ في تخليق مصفوفة البكسل.")
             }
-        }
-
-        if ((targetFile.exists() || true) && imageGenerator == null) {
-            // Smoothly fallback to the gorgeous responsive local neural pixel engine
-            val fallbackBitmap = generateFallbackBitmap(prompt)
-            emit(fallbackBitmap)
-            return@flow
         }
 
         val generator = imageGenerator ?: throw Exception("محرك التوليد المحلي غير مفعّل.")
@@ -247,6 +265,8 @@ class LocalHDImageEngine(private val context: Context) {
                 val bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
                 bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(argbData))
                 return@withContext bitmap
+            } else {
+                throw Exception("فشل التوليد: فشل مفسر C++ في تخليق مصفوفة البكسل.")
             }
         }
 
@@ -257,7 +277,6 @@ class LocalHDImageEngine(private val context: Context) {
         }
 
         try {
-
             val result = generator.generate(prompt, effectiveIterations, seed)
             val mpImage = result?.generatedImage() ?: throw Exception("فشل التوليد: لم يتم إرجاع أي صورة من $architecture.")
 
@@ -268,6 +287,10 @@ class LocalHDImageEngine(private val context: Context) {
     }
 
     fun close() {
+        if (modelCtxPointer != 0L) {
+            freeModelContext(modelCtxPointer)
+            modelCtxPointer = 0L
+        }
         imageGenerator?.close()
         imageGenerator = null
     }

@@ -12,6 +12,7 @@
 		[
 			"add_library",
 			"target_link_libraries",
+			"add_compile_options",
 			"add_compile_definitions",
 			"include_directories"
 		],
@@ -27,25 +28,31 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 47,
+				"line" : 50,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 56,
+				"line" : 59,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 13,
+				"line" : 16,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 16,
+				"line" : 13,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 19,
 				"parent" : 0
 			}
 		]
@@ -57,12 +64,20 @@
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -O3 -DGGML_MAX_NAME=128 -fno-limit-debug-info  -fPIC"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-O1"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-g0"
 				}
 			],
 			"defines" :
 			[
 				{
-					"backtrace" : 3,
+					"backtrace" : 4,
 					"define" : "GGML_MAX_NAME=128"
 				},
 				{
@@ -72,31 +87,31 @@
 			"includes" :
 			[
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/src"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/include"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/ggml/include"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/ggml/src"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/thirdparty"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/thirdparty/libwebp/src"
 				}
 			],
@@ -125,12 +140,20 @@
 			[
 				{
 					"fragment" : "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-O1"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-g0"
 				}
 			],
 			"defines" :
 			[
 				{
-					"backtrace" : 3,
+					"backtrace" : 4,
 					"define" : "GGML_MAX_NAME=128"
 				},
 				{
@@ -140,31 +163,31 @@
 			"includes" :
 			[
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/src"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/include"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/ggml/include"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/ggml/src"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/thirdparty"
 				},
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"path" : "/app/stable-diffusion.cpp/thirdparty/libwebp/src"
 				}
 			],

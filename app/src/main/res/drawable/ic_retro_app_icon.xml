@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Retro Dark Tech Background -->
+    <path
+        android:fillColor="#0C0C14"
+        android:pathData="M0,0h108v108h-108z"/>
+    <!-- Neon Magenta border grid -->
+    <path
+        android:strokeColor="#FF007F"
+        android:strokeWidth="2"
+        android:pathData="M14,14h80v80h-80z"/>
+    <!-- Cyan Gameboy screen box -->
+    <path
+        android:fillColor="#1A1A2F"
+        android:strokeColor="#00F0FF"
+        android:strokeWidth="2"
+        android:pathData="M24,24h60v36h-60z"/>
+    <!-- Golden Pixel Knight symbol inside screen -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M48,32h12v12h-12z M44,44h20v6h-20z"/>
+    <!-- Red NES Classic D-Pad -->
+    <path
+        android:fillColor="#FF3366"
+        android:pathData="M34,74h12v6h-12z M37,68h6v18h-6z"/>
+    <!-- Yellow Action Buttons A/B -->
+    <path
+        android:fillColor="#00FFCC"
+        android:pathData="M66,74m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"/>
+    <path
+        android:fillColor="#00F0FF"
+        android:pathData="M78,70m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0"/>
+</vector>

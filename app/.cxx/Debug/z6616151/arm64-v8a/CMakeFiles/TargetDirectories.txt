@@ -1,3 +1,0 @@
-/app/app/.cxx/Debug/z6616151/arm64-v8a/CMakeFiles/stable_diffusion_jni.dir
-/app/app/.cxx/Debug/z6616151/arm64-v8a/CMakeFiles/edit_cache.dir
-/app/app/.cxx/Debug/z6616151/arm64-v8a/CMakeFiles/rebuild_cache.dir

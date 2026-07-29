@@ -1,8 +1,0 @@
-# ninja log v5
-6	3202	1784947737372363003	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenize_util.cpp.o	f0bfaeb6ec4a24
-19	2354	1784947905160361114	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenize_util.cpp.o	198304a357cb36eb
-17	5566	1784947908392361078	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenizer.cpp.o	b1b268b94923afa1
-25	3264	1784948005692359982	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/qwen2_tokenizer.cpp.o	d8a95970d614996f
-0	7	0	clean	2d2f43cf2094d251
-46	2976	1784948171556358115	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenize_util.cpp.o	198304a357cb36eb
-44	7996	1784948176576358058	CMakeFiles/stable_diffusion_jni.dir/app/stable-diffusion.cpp/src/tokenizers/tokenizer.cpp.o	b1b268b94923afa1
