@@ -1,0 +1,34 @@
+{
+    "pixel_knight_hero.png": {
+        "filepath": "/app/dataset/raw/pixel_knight_hero.png",
+        "category": "characters",
+        "dimensions": "64x64",
+        "color_count": 4,
+        "prompt_en": "retro pixel knight hero, holding a shiny silver sword, nes gameboy style, size 64x64, colors 4",
+        "prompt_ar": "فارس بكسل ريترو، يحمل سيفاً فضياً لامعاً، طراز جيم بوي، حجم 64×64، عدد الألوان 4"
+    },
+    "pixel_gold_chest.png": {
+        "filepath": "/app/dataset/raw/pixel_gold_chest.png",
+        "category": "items",
+        "dimensions": "64x64",
+        "color_count": 5,
+        "prompt_en": "retro gold treasure chest sprite, closed wood and gold trim, nes style, size 64x64, colors 5",
+        "prompt_ar": "صندوق كنز ذهبي ريترو بكسل، مغلق بالخشب والذهب، طراز فاميكوم، حجم 64×64، عدد الألوان 5"
+    },
+    "retro_alien_monster.png": {
+        "filepath": "/app/dataset/raw/retro_alien_monster.png",
+        "category": "monsters",
+        "dimensions": "64x64",
+        "color_count": 4,
+        "prompt_en": "retro alien monster sprite, glowing red eyes, famicom style enemy, size 64x64, colors 4",
+        "prompt_ar": "وحش فضائي ريترو بكسل، عينان حمراوان متوهجتان، عدو طراز عائلة، حجم 64×64، عدد الألوان 4"
+    },
+    "famicom_castle_brick.png": {
+        "filepath": "/app/dataset/raw/famicom_castle_brick.png",
+        "category": "backgrounds",
+        "dimensions": "64x64",
+        "color_count": 4,
+        "prompt_en": "retro castle brick block pattern, game boy level design tile, size 64x64, colors 4",
+        "prompt_ar": "قالب طوب قلعة ريترو بكسل، تصميم مستويات جيم بوي، حجم 64×64، عدد الألوان 4"
+    }
+}

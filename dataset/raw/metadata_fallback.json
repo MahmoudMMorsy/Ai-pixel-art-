@@ -1,0 +1,30 @@
+[
+    {
+        "filepath": "/app/dataset/raw/pixel_knight_hero.png",
+        "filename": "pixel_knight_hero.png",
+        "category": "characters",
+        "desc_en": "retro pixel knight hero, holding a shiny silver sword, nes gameboy style",
+        "desc_ar": "فارس بكسل ريترو، يحمل سيفاً فضياً لامعاً، طراز جيم بوي"
+    },
+    {
+        "filepath": "/app/dataset/raw/retro_alien_monster.png",
+        "filename": "retro_alien_monster.png",
+        "category": "monsters",
+        "desc_en": "retro alien monster sprite, glowing red eyes, famicom style enemy",
+        "desc_ar": "وحش فضائي ريترو بكسل، عينان حمراوان متوهجتان، عدو طراز عائلة"
+    },
+    {
+        "filepath": "/app/dataset/raw/pixel_gold_chest.png",
+        "filename": "pixel_gold_chest.png",
+        "category": "items",
+        "desc_en": "retro gold treasure chest sprite, closed wood and gold trim, nes style",
+        "desc_ar": "صندوق كنز ذهبي ريترو بكسل، مغلق بالخشب والذهب، طراز فاميكوم"
+    },
+    {
+        "filepath": "/app/dataset/raw/famicom_castle_brick.png",
+        "filename": "famicom_castle_brick.png",
+        "category": "backgrounds",
+        "desc_en": "retro castle brick block pattern, game boy level design tile",
+        "desc_ar": "قالب طوب قلعة ريترو بكسل، تصميم مستويات جيم بوي"
+    }
+]
