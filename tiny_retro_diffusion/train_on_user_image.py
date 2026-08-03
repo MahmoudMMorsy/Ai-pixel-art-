@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
@@ -11,37 +12,53 @@ from train import LinearNoiseSchedule
 
 class UserImageTileDataset(Dataset):
     """
-    Slices a 512x512 user base image (such as test.png) into 64 unique
+    Slices a user base image (downscaled/cropped dynamically to 512x512) into 64 unique
     64x64 tiles, forming a rich custom dataset to train/fine-tune the
     ContextRetroUNet model on the user's uploaded visual patterns.
     """
-    def __init__(self, image_path="test.png", tile_size=64):
+    def __init__(self, image_path="test.png", tile_size=64, prompt_ar=None, prompt_en=None):
         self.tile_size = tile_size
         self.tiles = []
         self.prompts = []
 
         if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Source user image '{image_path}' not found at the root!")
+            raise FileNotFoundError(f"Source user image '{image_path}' not found!")
 
+        # Load and handle image opening smoothly
         img = Image.open(image_path).convert("RGB")
+
+        # Automatically center crop & downscale to exactly 512x512
         w, h = img.size
-        print(f"📊 Loading and slicing user base image '{image_path}' of size {w}x{h}...")
+        min_dim = min(w, h)
+        left = (w - min_dim) // 2
+        top = (h - min_dim) // 2
+        right = left + min_dim
+        bottom = top + min_dim
+
+        img_cropped = img.crop((left, top, right, bottom))
+        img_resized = img_cropped.resize((512, 512), Image.Resampling.LANCZOS)
+
+        print(f"📊 Auto-processed user base image '{image_path}' (Original: {w}x{h}) resized & center-cropped to 512x512.")
+
+        # Default prompts if not provided
+        ar_p = prompt_ar if prompt_ar else "فارس الأسطورة ريترو"
+        en_p = prompt_en if prompt_en else "fantasy pixel-art knight standing in front of a majestic castle"
 
         # Slice the image into non-overlapping tiles of size tile_size x tile_size
-        cols = w // tile_size
-        rows = h // tile_size
+        cols = 512 // tile_size
+        rows = 512 // tile_size
 
         for r in range(rows):
             for c in range(cols):
                 box = (c * tile_size, r * tile_size, (c + 1) * tile_size, (r + 1) * tile_size)
-                tile = img.crop(box)
+                tile = img_resized.crop(box)
                 self.tiles.append(tile)
 
-                # Alternate bilingual gaming/retro prompts for each tile to embed deep semantic associations
+                # Alternate bilingual prompts for each tile to embed deep semantic associations
                 if (r + c) % 2 == 0:
-                    self.prompts.append("فارس الأسطورة ريترو")
+                    self.prompts.append(ar_p)
                 else:
-                    self.prompts.append("fantasy pixel-art knight standing in front of a majestic castle")
+                    self.prompts.append(en_p)
 
         print(f"🎉 Successfully sliced image into {len(self.tiles)} high-quality {tile_size}x{tile_size} training samples!")
 
@@ -59,16 +76,16 @@ class UserImageTileDataset(Dataset):
 
         return img_tensor, prompt
 
-def train_on_user_image(epochs=15, batch_size=8, lr=1e-3, save_path="bilingual_retro_tiny.pth"):
-    print("================================================================")
-    print("   Training Bilingual ContextRetroUNet Model on User Image")
-    print("================================================================")
+def train_on_user_image(image_path="test.png", epochs=15, batch_size=8, lr=1e-3, save_path="bilingual_retro_tiny.pth", prompt_ar=None, prompt_en=None):
+    print("=======================================================================")
+    print("   Training/Fine-tuning ContextRetroUNet Model on Custom User Image")
+    print("=======================================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device being used: {device}")
 
     # Initialize the custom sliced tile dataset
-    dataset = UserImageTileDataset(image_path="test.png", tile_size=64)
+    dataset = UserImageTileDataset(image_path=image_path, tile_size=64, prompt_ar=prompt_ar, prompt_en=prompt_en)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     # Initialize ContextRetroUNet with 3 input channels (RGB), 64 features, 128 embedding dim
@@ -128,7 +145,20 @@ def train_on_user_image(epochs=15, batch_size=8, lr=1e-3, save_path="bilingual_r
     # Save trained checkpoint to root directory for generate.py
     print(f"\nSaving final trained model parameters to: {save_path}")
     torch.save(model.state_dict(), save_path)
-    print("🎉 Training on user image completed successfully! weights saved.")
+    print("🎉 Training on user image completed successfully! Weights saved.")
 
 if __name__ == "__main__":
-    train_on_user_image(epochs=15, batch_size=8, lr=1e-3)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--image", type=str, default="test.png", help="Path to user input image")
+    parser.add_argument("--epochs", type=int, default=15, help="Number of training epochs")
+    parser.add_argument("--prompt_ar", type=str, default=None, help="Custom Arabic prompt")
+    parser.add_argument("--prompt_en", type=str, default=None, help="Custom English prompt")
+    args = parser.parse_args()
+
+    train_on_user_image(
+        image_path=args.image,
+        epochs=args.epochs,
+        prompt_ar=args.prompt_ar,
+        prompt_en=args.prompt_en
+    )
