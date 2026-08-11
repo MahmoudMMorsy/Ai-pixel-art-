@@ -35,6 +35,8 @@ import com.retro.pixelanimator.engine.PixelArtAnimationResponse
 import com.retro.pixelanimator.ui.theme.*
 import com.retro.pixelanimator.ui.viewmodel.PixelAnimatorViewModel
 import com.retro.pixelanimator.ui.viewmodel.UiState
+import android.graphics.BitmapFactory
+import android.util.Base64
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -235,7 +237,7 @@ fun PixelLabScreen(
                         )
                     }
 
-                    Divider(color = Color(0xFF24243C))
+                    HorizontalDivider(color = Color(0xFF24243C))
 
                     if (isImporting) {
                         Column(
@@ -333,14 +335,34 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 3. CRT Screen & Pixel Canvas ---
+        // --- 3. Mode Toggles (Pixel vs Real HD Image Mode) ---
         item {
-            val currentAnimation = (uiState as? UiState.Success)?.data
-            val palette = currentAnimation?.palette ?: listOf("#0B0F19", "#4F46E5", "#06B6D4", "#F43F5E", "#EC4899", "#FFFFFF")
-            val frames = currentAnimation?.frames ?: listOf("0".repeat(256))
-            val activeFrameIndex = currentFrameIndex.coerceIn(0, frames.size - 1)
-            val frameString = frames.getOrNull(activeFrameIndex) ?: "0".repeat(256)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = !isRealImageState,
+                        onClick = { viewModel.isRealImageMode.value = false },
+                        label = { Text("نمط ألعاب البكسل 🎮", color = Color.White) }
+                    )
+                    FilterChip(
+                        selected = isRealImageState,
+                        onClick = { viewModel.isRealImageMode.value = true },
+                        label = { Text("توليد صور واقعية 📷", color = Color.White) }
+                    )
+                }
+            }
+        }
 
+        // --- 4. CRT Screen & Pixel Canvas ---
+        item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -357,7 +379,7 @@ fun PixelLabScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "شاشة التوليد الكلاسيكية ✦ CRT MONITOR",
+                        text = "شاشة العرض الكلاسيكية ✦ MONITOR SCREEN",
                         color = Color(0xFF00F0FF),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
@@ -366,7 +388,7 @@ fun PixelLabScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // --- The 16x16 Pixel Canvas Block with scanline overlays ---
+                    // Dynamic Screen rendering depending on Active Mode
                     Box(
                         modifier = Modifier
                             .size(240.dp)
@@ -375,7 +397,6 @@ fun PixelLabScreen(
                             .border(3.dp, Color(0xFF00F0FF), RoundedCornerShape(12.dp))
                             .drawWithContent {
                                 drawContent()
-                                // Simulate CRT Retro Scanlines Overlay
                                 val scanlineHeight = 4f
                                 val numLines = (size.height / scanlineHeight).toInt()
                                 for (i in 0 until numLines) {
@@ -389,40 +410,68 @@ fun PixelLabScreen(
                                     }
                                 }
                             }
-                            .testTag("pixel_canvas")
                     ) {
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            val cellSize = size.width / 16f
-                            for (row in 0 until 16) {
-                                for (col in 0 until 16) {
-                                    val charIdx = row * 16 + col
-                                    val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
-                                    val cellColor = getColorForChar(char, palette)
-
-                                    drawRect(
-                                        color = cellColor,
-                                        topLeft = Offset(col * cellSize, row * cellSize),
-                                        size = androidx.compose.ui.geometry.Size(cellSize + 0.5f, cellSize + 0.5f)
+                        if (isRealImageState) {
+                            // Render GGUF real image output
+                            if (uiState is UiState.Loading) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(color = Color(0xFFFF007F))
+                                }
+                            } else if (realImageBase64 != null) {
+                                val imageBytes = Base64.decode(realImageBase64, Base64.DEFAULT)
+                                val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                                if (bitmap != null) {
+                                    Image(
+                                        bitmap = bitmap.asImageBitmap(),
+                                        contentDescription = null,
+                                        modifier = Modifier.fillMaxSize()
                                     )
                                 }
+                            } else {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text("شاشة خاملة ✦ اكتب وصفك واضغط توليد", color = Color(0xFF8A8A9E), fontSize = 11.sp, textAlign = TextAlign.Center)
+                                }
                             }
+                        } else {
+                            // Retro pixel canvas
+                            val currentAnimation = (uiState as? UiState.Success)?.data
+                            val palette = currentAnimation?.palette ?: listOf("#0B0F19", "#4F46E5", "#06B6D4", "#F43F5E", "#EC4899", "#FFFFFF")
+                            val frames = currentAnimation?.frames ?: listOf("0".repeat(256))
+                            val activeFrameIndex = currentFrameIndex.coerceIn(0, frames.size - 1)
+                            val frameString = frames.getOrNull(activeFrameIndex) ?: "0".repeat(256)
 
-                            // Subtle retro grid lines
-                            if (showGridLines) {
-                                for (i in 1 until 16) {
-                                    val offset = i * cellSize
-                                    drawLine(
-                                        color = Color.White.copy(alpha = 0.08f),
-                                        start = Offset(offset, 0f),
-                                        end = Offset(offset, size.height),
-                                        strokeWidth = 1f
-                                    )
-                                    drawLine(
-                                        color = Color.White.copy(alpha = 0.08f),
-                                        start = Offset(0f, offset),
-                                        end = Offset(size.width, offset),
-                                        strokeWidth = 1f
-                                    )
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val cellSize = size.width / 16f
+                                for (row in 0 until 16) {
+                                    for (col in 0 until 16) {
+                                        val charIdx = row * 16 + col
+                                        val char = if (charIdx < frameString.length) frameString[charIdx] else '0'
+                                        val cellColor = getColorForChar(char, palette)
+
+                                        drawRect(
+                                            color = cellColor,
+                                            topLeft = Offset(col * cellSize, row * cellSize),
+                                            size = androidx.compose.ui.geometry.Size(cellSize + 0.5f, cellSize + 0.5f)
+                                        )
+                                    }
+                                }
+
+                                if (showGridLines) {
+                                    for (i in 1 until 16) {
+                                        val offset = i * cellSize
+                                        drawLine(
+                                            color = Color.White.copy(alpha = 0.08f),
+                                            start = Offset(offset, 0f),
+                                            end = Offset(offset, size.height),
+                                            strokeWidth = 1f
+                                        )
+                                        drawLine(
+                                            color = Color.White.copy(alpha = 0.08f),
+                                            start = Offset(0f, offset),
+                                            end = Offset(size.width, offset),
+                                            strokeWidth = 1f
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -430,145 +479,25 @@ fun PixelLabScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // CRT Status and toggle network
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    if (!isRealImageState) {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = "شبكة الرسم مفعّلة",
-                                color = Color(0xFF8A8A9E),
-                                fontSize = 11.sp
-                            )
-                            Switch(
-                                checked = showGridLines,
-                                onCheckedChange = { showGridLines = it },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color(0xFF00F0FF),
-                                    checkedTrackColor = Color(0xFF00F0FF).copy(alpha = 0.3f)
-                                )
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFF1B1B30),
-                        ) {
-                            Text(
-                                text = "فريم: ${activeFrameIndex + 1} / ${frames.size}",
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // --- 4. NES Console Controller (D-Pad & Buttons) ---
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, Color(0xFFFF007F).copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF141424)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Text(
-                        text = "جهاز التحكم ✦ FAMICOM CONTROLLER",
-                        color = Color(0xFFFF007F),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Classic D-Pad Style Controls (Left/Right)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = {
-                                    viewModel.stopAnimationPlayback()
-                                    viewModel.setCurrentFrameIndex((currentFrameIndex - 1).coerceAtLeast(0))
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
-                                contentPadding = PaddingValues(0.dp),
-                                modifier = Modifier.size(44.dp),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "السابق", tint = Color.White)
-                            }
-
-                            Text(
-                                text = "D-PAD",
-                                color = Color(0xFF8A8A9E),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            Button(
-                                onClick = {
-                                    viewModel.stopAnimationPlayback()
-                                    viewModel.setCurrentFrameIndex(currentFrameIndex + 1)
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24243C)),
-                                contentPadding = PaddingValues(0.dp),
-                                modifier = Modifier.size(44.dp),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Icon(Icons.Default.ArrowForward, contentDescription = "التالي", tint = Color.White)
-                            }
-                        }
-
-                        // Play/Pause Action Buttons
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Button(
-                                    onClick = { viewModel.togglePlayback() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF007F)),
-                                    modifier = Modifier.size(48.dp),
-                                    shape = RoundedCornerShape(50)
-                                ) {
-                                    Text(
-                                        text = if (isPlaying) "❚❚" else "▶",
-                                        color = Color.White,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Black
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text("شبكة الرسم مفعّلة", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                                Switch(
+                                    checked = showGridLines,
+                                    onCheckedChange = { showGridLines = it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color(0xFF00F0FF),
+                                        checkedTrackColor = Color(0xFF00F0FF).copy(alpha = 0.3f)
                                     )
-                                }
-                                Text("A-START", color = Color(0xFFFF007F), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
-                            }
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Button(
-                                    onClick = { viewModel.stopAnimationPlayback() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00F0FF)),
-                                    modifier = Modifier.size(48.dp),
-                                    shape = RoundedCornerShape(50)
-                                ) {
-                                    Icon(Icons.Default.Close, contentDescription = "توقف", tint = Color.Black)
-                                }
-                                Text("B-STOP", color = Color(0xFF00F0FF), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+                                )
                             }
                         }
                     }
@@ -576,7 +505,7 @@ fun PixelLabScreen(
             }
         }
 
-        // --- 5. Inputs & Bilingual Prompts config ---
+        // --- 5. Inputs & Prompts Config ---
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -588,7 +517,7 @@ fun PixelLabScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "لوحة التوجيه الثنائية ✦ LANGUAGE CENTER",
+                        text = "لوحة التوجيه والتحكم ✦ CONTROL CENTER",
                         color = Color(0xFF00F0FF),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
@@ -597,10 +526,8 @@ fun PixelLabScreen(
                     OutlinedTextField(
                         value = promptState,
                         onValueChange = { viewModel.prompt.value = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("prompt_input_field"),
-                        label = { Text("اكتب وصف اللعبة باللغة العربية أو الإنجليزية", color = Color(0xFF8A8A9E)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("اكتب الوصف أو التوجيه هنا", color = Color(0xFF8A8A9E)) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF00F0FF),
                             unfocusedBorderColor = Color(0xFF24243C),
@@ -610,49 +537,24 @@ fun PixelLabScreen(
                         shape = RoundedCornerShape(10.dp)
                     )
 
-                    // Presets
-                    Text(
-                        text = "عناصر مجهزة سريعة ✦ QUICK PRESETS:",
-                        color = Color(0xFF8A8A9E),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    FlowRow(
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        bilingualRetroRecipes.forEach { (label, fullPrompt) ->
-                            Surface(
-                                modifier = Modifier.clickable {
-                                    viewModel.prompt.value = fullPrompt
-                                    Toast.makeText(context, "تم اختيار: $label", Toast.LENGTH_SHORT).show()
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color(0xFF1D1D35),
-                                border = BorderStroke(1.dp, Color(0xFF00F0FF).copy(alpha = 0.2f))
-                            ) {
-                                Text(
-                                    text = label,
-                                    color = Color.White,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
+                        Text("التوليد المحلي عبر الـ NPU/GGUF:", color = Color(0xFF8A8A9E), fontSize = 11.sp)
+                        Switch(
+                            checked = isLocalHDMode,
+                            onCheckedChange = { viewModel.isLocalHDMode.value = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF00FFCC)
+                            )
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Generation button
                     Button(
                         onClick = { viewModel.generatePixelArt() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .testTag("generate_button"),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         contentPadding = PaddingValues(0.dp)
                     ) {
@@ -670,18 +572,7 @@ fun PixelLabScreen(
                             if (uiState is UiState.Loading) {
                                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                             } else {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(Icons.Default.Star, contentDescription = null, tint = Color.White)
-                                    Text(
-                                        text = "توليد صورة ريترو فخمة ✦ GENERATE",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
-                                }
+                                Text("بدء عملية التوليد الفائقة ✦ GENERATE", color = Color.White, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
