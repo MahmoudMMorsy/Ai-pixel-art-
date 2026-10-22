@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import argparse
 from PIL import Image, ImageDraw, ImageFont
 import arabic_reshaper
 from bidi.algorithm import get_display
@@ -46,7 +47,6 @@ def overlay_arabic_text(image_path, text, output_path, font_path=None, font_size
 
     # Calculate text dimensions for centering
     try:
-        # Compatibility with different Pillow versions
         if hasattr(draw, "textbbox"):
             bbox = draw.textbbox((0, 0), aligned_text, font=font)
             text_w = bbox[2] - bbox[0]
@@ -75,41 +75,71 @@ def overlay_arabic_text(image_path, text, output_path, font_path=None, font_size
         f"Arabic text successfully overlayed and saved to: {output_path}")
     return True
 
+def resolve_model_path(requested_path):
+    """
+    Resolves the best available GGUF model path across standard locations.
+    """
+    candidates = [
+        requested_path,
+        "bilingual_retro_tiny_230mb.gguf",
+        "models/bilingual_retro_tiny_compatible.gguf",
+        "bk-sdm-tiny_q4_0.gguf",
+        "bk-sdm-tiny_q8_0.gguf"
+    ]
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    return None
+
+def resolve_sd_cli():
+    """
+    Finds the compiled stable-diffusion.cpp CLI executable.
+    """
+    candidates = [
+        "stable-diffusion.cpp/build/bin/sd-cli",
+        "stable-diffusion.cpp/bin/sd-cli",
+        "stable-diffusion.cpp/build/Release/sd-cli"
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            return c
+    return None
+
 def generate_image_gguf(prompt, arabic_text=None, model_path="bilingual_retro_tiny_230mb.gguf", output_path="retro_generated_gguf.png", steps=15, width=512, height=512, mode="txt2img", init_image=None, strength=0.75):
     """
     Executes native stable-diffusion.cpp GGUF inference engine to generate or edit images,
     and dynamically applies beautifully rendered Arabic text.
     """
-    log(f"بدء إنتاج الصورة باستخدام نموذج GGUF الكبير: {model_path}",
-        f"Starting high-fidelity GGUF inference using large-scale model: {model_path}")
+    resolved_model = resolve_model_path(model_path)
+    if not resolved_model:
+        log_error(f"لم يتم العثور على أي نموذج GGUF صالح. المسار المطلوب: {model_path}",
+                  f"Could not locate any valid GGUF model. Specified path: {model_path}")
+        return False
 
-    sd_cli = "stable-diffusion.cpp/build/bin/sd-cli"
-    if not os.path.exists(sd_cli):
-        log_error("ملف مفسر GGUF (sd-cli) غير موجود. يرجى تجميعه أولاً.",
+    sd_cli = resolve_sd_cli()
+    if not sd_cli:
+        log_error("ملف مفسر GGUF (sd-cli) غير موجود. يرجى تجميعه أولاً عبر stable-diffusion.cpp.",
                   "Could not find compiled sd-cli binary. Please build stable-diffusion.cpp first.")
         return False
 
-    if not os.path.exists(model_path):
-        log_error(f"ملف نموذج GGUF غير موجود في: {model_path}", f"GGUF model file not found at: {model_path}")
-        return False
+    log(f"بدء إنتاج الصورة باستخدام نموذج GGUF: {resolved_model}",
+        f"Starting high-fidelity GGUF inference using model: {resolved_model}")
 
     temp_out = "temp_gguf_out.png"
     if os.path.exists(temp_out):
         os.remove(temp_out)
 
-    # Construct the native stable-diffusion.cpp CLI command
     cmd = [
         sd_cli,
-        "-m", model_path,
+        "-m", resolved_model,
         "-p", prompt,
         "-o", temp_out,
         "--steps", str(steps),
         "-W", str(width),
         "-H", str(height),
-        "-s", "42" # fixed seed for reproducibility
+        "-s", "42"
     ]
 
-    # Handle image-to-image (editing) mode if requested
     if mode == "img2img" and init_image:
         if os.path.exists(init_image):
             cmd.extend([
@@ -123,28 +153,25 @@ def generate_image_gguf(prompt, arabic_text=None, model_path="bilingual_retro_ti
                       f"Initial image for editing not found: {init_image}")
             return False
 
-    log(f"جاري تشغيل عملية المعالجة العصبية العميقة: {' '.join(cmd)}",
+    log(f"جاري تشغيل المعالجة العصبية العميقة: {' '.join(cmd)}",
         f"Executing deep neural processing: {' '.join(cmd)}")
 
     try:
         subprocess.run(cmd, check=True)
         if os.path.exists(temp_out):
-            # If Arabic text overlay is requested, process and overlay it
             if arabic_text:
                 font_path = "tiny_retro_diffusion/fonts/NotoNaskhArabic-Regular.ttf"
-                # Position text nicely at the bottom center
                 pos = (width // 2, int(height * 0.82))
                 overlay_arabic_text(
                     image_path=temp_out,
                     text=arabic_text,
                     output_path=output_path,
                     font_path=font_path,
-                    font_size=int(height * 0.09), # adaptive font size (9% of height)
+                    font_size=int(height * 0.09),
                     position=pos
                 )
                 os.remove(temp_out)
             else:
-                # No Arabic text, just rename the temporary file to final output
                 if os.path.exists(output_path):
                     os.remove(output_path)
                 os.rename(temp_out, output_path)
@@ -159,17 +186,29 @@ def generate_image_gguf(prompt, arabic_text=None, model_path="bilingual_retro_ti
         return False
 
 if __name__ == "__main__":
-    # Test generation from prompt
-    prompt_str = "A gorgeous retro fantasy pixel-art knight standing in front of a majestic castle, 8-bit NES color scheme"
-    arabic_text_str = "فارس الأسطورة"
+    parser = argparse.ArgumentParser(description="GGUF Bilingual Image Generation & Editing Engine")
+    parser.add_argument("--prompt", type=str, default="A gorgeous retro fantasy pixel-art knight standing in front of a majestic castle, 8-bit NES color scheme", help="Prompt text")
+    parser.add_argument("--arabic", type=str, default="فارس الأسطورة", help="Arabic text overlay")
+    parser.add_argument("--model", type=str, default="bilingual_retro_tiny_230mb.gguf", help="GGUF model file path")
+    parser.add_argument("--output", type=str, default="retro_arabic_generated.png", help="Output PNG file path")
+    parser.add_argument("--mode", type=str, choices=["txt2img", "img2img"], default="txt2img", help="Inference mode")
+    parser.add_argument("--init_image", type=str, default=None, help="Initial image for img2img")
+    parser.add_argument("--strength", type=float, default=0.75, help="Img2Img strength")
+    parser.add_argument("--steps", type=int, default=10, help="Denoising steps")
+    parser.add_argument("--width", type=int, default=512, help="Image width")
+    parser.add_argument("--height", type=int, default=512, help="Image height")
 
-    # Run the integration test
+    args = parser.parse_args()
+
     generate_image_gguf(
-        prompt=prompt_str,
-        arabic_text=arabic_text_str,
-        model_path="bilingual_retro_tiny_230mb.gguf",
-        output_path="retro_arabic_generated.png",
-        steps=10,
-        width=512,
-        height=512
+        prompt=args.prompt,
+        arabic_text=args.arabic,
+        model_path=args.model,
+        output_path=args.output,
+        steps=args.steps,
+        width=args.width,
+        height=args.height,
+        mode=args.mode,
+        init_image=args.init_image,
+        strength=args.strength
     )
