@@ -1,18 +1,25 @@
 {
     "registered_sources": [
-        "https://github.com/topics/pixel-art",
-        "https://github.com/KenneyNL",
-        "https://opengameart.org/art-search-advanced?keys=&field_art_type_tid%5B%5D=9",
-        "https://commons.wikimedia.org/wiki/Category:Pixel_art",
-        "https://huggingface.co/datasets?search=pixel-art",
+        "https://github.com/topics/pixel-art?hl=ar-EG",
+        "https://github.com/KenneyNL?hl=ar-EG",
+        "https://opengameart.org/art-search-advanced?keys=&field_art_type_tid%5B%5D=9&hl=ar-EG",
+        "https://commons.wikimedia.org/wiki/Category:Pixel_art?hl=ar-EG",
+        "https://huggingface.co/datasets?search=pixel-art&hl=ar-EG",
         "https://www.kaggle.com/datasets?search=pixel+art",
-        "https://www.spriters-resource.com/",
-        "https://www.artstation.com/channels/pixel_art",
+        "https://www.spriters-resource.com/?hl=ar-EG",
+        "https://www.artstation.com/channels/pixel_art?hl=ar-EG",
         "https://www.artstation.com/search?sort_by=relevance&query=pixel%20art%20sprite%20sheet",
-        "https://www.pinterest.com/search/pins/?q=pixel%20art%20sprite%20sheet",
-        "https://www.pinterest.com/search/pins/?q=pixel%20art%20game%20assets"
+        "https://www.pinterest.com/search/pins/?q=pixel%20art%20sprite%20sheet&hl=ar-EG",
+        "https://www.pinterest.com/search/pins/?q=pixel%20art%20game%20assets&hl=ar-EG"
     ],
     "metadata": [
+        {
+            "filepath": "/app/dataset/raw/star_office_pixel_room.png",
+            "filename": "star_office_pixel_room.png",
+            "category": "backgrounds",
+            "desc_en": "retro isometric pixel art office room, 16-bit arcade scenery",
+            "desc_ar": "غرفة مكتب بكسل آرت آيزومتريك ريترو، طراز العاب 16-بت"
+        },
         {
             "filepath": "/app/dataset/raw/pixel_knight_hero.png",
             "filename": "pixel_knight_hero.png",
@@ -25,7 +32,7 @@
             "filename": "retro_alien_monster.png",
             "category": "monsters",
             "desc_en": "retro alien monster sprite, glowing red eyes, famicom style enemy",
-            "desc_ar": "وحش فضائي ريترو بكسل، عينان حمراوان متوهجتان، عدو طراز عائلة"
+            "desc_ar": "وحش فضائي ريترو بكسل، عينان حمراوان متوهجتان، عدو طراز فاميكوم"
         },
         {
             "filepath": "/app/dataset/raw/pixel_gold_chest.png",
@@ -40,6 +47,13 @@
             "category": "backgrounds",
             "desc_en": "retro castle brick block pattern, game boy level design tile",
             "desc_ar": "قالب طوب قلعة ريترو بكسل، تصميم مستويات جيم بوي"
+        },
+        {
+            "filepath": "/app/dataset/raw/gameboy_retro_ship.png",
+            "filename": "gameboy_retro_ship.png",
+            "category": "vehicles",
+            "desc_en": "classic game boy 4-shade green space fighter spaceship retro sprite",
+            "desc_ar": "مركبة فضائية ريترو بتدرجات الجيم بوي الخضراء الكلاسيكية، طراز ألعاب الآركيد"
         }
     ]
 }
