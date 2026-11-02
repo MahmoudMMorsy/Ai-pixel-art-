@@ -19,6 +19,10 @@
    - تكميم جميع مصفوفات الأوزان (UNet, CLIP Text Encoder, VAE) إلى صيغة GGUF القياسية لتعمل بأقصى سرعة على أنوية الـ CPU مباشرة بواسطة مكتبة C++ مدمجة (`stable-diffusion.cpp` و JNI NDK في تطبيق الأندرويد).
    - حجم الملف النهائي يبلغ **~710MB** فقط، مما يجعله نموذجاً متكاملاً (Full Checkpoint) وليس مجرد لورا أو ملحق.
 
+3. **القدرة المزدوجة على التوليد والتعديل (Txt2Img & Img2Img / Inpainting):**
+   - دعم التوليد من الصفر عبر الأوصاف النصية (Text-to-Image).
+   - دعم التعديل المتقدم على الصور بالصور والنصوص (Image-to-Image) بالتحكم في شدة التعديل عبر معامل `--strength` والبدء بصورة أولية `--init_image`، لتحويل أي صورة عادية أو مسودة إلى رسم بكسل آرت كلاسيكي ساحر.
+
 ---
 
 ## 📥 2. خط سحب البيانات التلقائي والمصادر المعتمدة عبر أداة gallery-dl
@@ -43,6 +47,16 @@
 # 1. تثبيت الأداة
 pip install gallery-dl
 
+# سحب ألبوم بينترست بكسل آرت بأعلى جودة
+gallery-dl --directory "dataset/raw" "https://www.pinterest.com/search/pins/?q=pixel%20art%20sprite%20sheet"
+
+# سحب أصول من آرت ستيشن
+gallery-dl --directory "dataset/raw" "https://www.artstation.com/channels/pixel_art"
+```
+
+### 🏷️ التوسيم التلقائي ثنائي اللغة (Bilingual Auto-Tagging):
+- تحليل الصور ديناميكياً لاستخلاص الأبعاد وعدد الألوان الفريدة ونمط الرسم (NES / Gameboy / Famicom).
+- توليد أوصاف مدمجة واحترافية باللغتين العربية والإنجليزية لتمكين التوليد والتحكم ثنائي اللغة بشكل كامل (مثل: `famicom castle brick, size 64x64, colors 4 | قالب طوب قلعة ريترو بكسل، تصميم مستويات جيم بوي`).
 # 2. سحب ألبومات بينترست دفعة واحدة بأعلى دقة:
 gallery-dl "https://www.pinterest.com/search/pins/?q=pixel%20art%20sprite%20sheet"
 
@@ -76,6 +90,14 @@ gallery-dl "https://www.artstation.com/channels/pixel_art"
 
 ## 📱 5. التشغيل على الموبايل والأجهزة الضعيفة (Android & Low-End PC)
 
+1. **تحميل وتحويل الأوزان:**
+   تحميل نموذج الـ BK-SDM-Tiny وتحويله لملف `.safetensors` موحد عبر `retro_sd_quantizer/download_and_convert.py`.
+2. **تجميع مفسر GGUF وتكميم النموذج:**
+   بناء مكتبة ومفسر `stable-diffusion.cpp` وتكميم ملفات النموذج للحصول على ملف GGUF المكتمل بحجم 710MB عبر `retro_sd_quantizer/convert_and_quantize.py`.
+3. **التوليد والتعديل مع الكتابة العربية الفورية (Txt2Img & Img2Img):**
+   استدعاء محرك التوليد والتعديل `tiny_retro_diffusion/generate_large_arabic_gguf.py` لإنتاج وتعديل صور بكسل آرت خرافية مع كتابة النصوص العربية السليمة والمنسقة تلقائياً.
+4. **النشر والتشغيل على الموبايل والأجهزة الضعيفة (Pixel Animator):**
+   تطبيق الـ APK وتطبيقات الـ C++ المرفقة جاهزة بالكامل لدعم استيراد النموذج وتوليد وتعديل رسومات ريترو مذهلة محلياً 100% دون الحاجة إلى إنترنت وبأقل موارد ممكنة.
 - **ملف GGUF جاهز ومدمج:** تم تجهيز وربط النموذج في المسار:
   `models/bilingual_retro_tiny_compatible.gguf`
 - **تطبيق الأندرويد المدمج (`PixelAnimatorRetro.apk` و كود Kotlin في `app/`):**
