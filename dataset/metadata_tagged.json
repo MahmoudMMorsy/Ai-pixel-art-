@@ -15,6 +15,22 @@
         "prompt_en": "retro gold treasure chest sprite, closed wood and gold trim, nes style, size 64x64, colors 5",
         "prompt_ar": "صندوق كنز ذهبي ريترو بكسل، مغلق بالخشب والذهب، طراز فاميكوم، حجم 64×64، عدد الألوان 5"
     },
+    "star_office_pixel_room.png": {
+        "filepath": "/app/dataset/raw/star_office_pixel_room.png",
+        "category": "items",
+        "dimensions": "1280x720",
+        "color_count": 63987,
+        "prompt_en": "star office pixel room retro game pixel asset, high contrast gaming collectible, size 1280x720, colors 63987",
+        "prompt_ar": "عنصر لعبة بكسل star office pixel room ريترو، قطعة مجمعة لألعاب كلاسيكية عالية التباين، حجم 1280×720، عدد الألوان 63987"
+    },
+    "gameboy_retro_ship.png": {
+        "filepath": "/app/dataset/raw/gameboy_retro_ship.png",
+        "category": "items",
+        "dimensions": "64x64",
+        "color_count": 4,
+        "prompt_en": "gameboy retro ship retro game pixel asset, high contrast gaming collectible, size 64x64, colors 4",
+        "prompt_ar": "عنصر لعبة بكسل gameboy retro ship ريترو، قطعة مجمعة لألعاب كلاسيكية عالية التباين، حجم 64×64، عدد الألوان 4"
+    },
     "retro_alien_monster.png": {
         "filepath": "/app/dataset/raw/retro_alien_monster.png",
         "category": "monsters",
