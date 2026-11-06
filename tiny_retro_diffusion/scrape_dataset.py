@@ -72,7 +72,7 @@ def scrape_with_gallery_dl(target_url, output_dir):
     ]
 
     try:
-        subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=25)
+        subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=20)
         log(f"اكتملت عملية السحب بنجاح عبر gallery-dl للرابط: {target_url}!",
             f"Scraping completed successfully via gallery-dl for: {target_url}!")
         return True
@@ -204,7 +204,7 @@ def download_direct_assets(output_dir):
                 asset["url"],
                 headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
             )
-            with urllib.request.urlopen(req, timeout=15) as response:
+            with urllib.request.urlopen(req, timeout=10) as response:
                 with open(target_path, "wb") as f:
                     f.write(response.read())
 
@@ -240,10 +240,8 @@ def run_scraper(target_url=None, output_dir="dataset/raw"):
 
     has_gallery_dl = check_and_install_gallery_dl()
 
-    if has_gallery_dl:
-        sources_to_scrape = [target_url] if target_url else TARGET_PIXEL_ART_SOURCES[:2]
-        for src in sources_to_scrape:
-            scrape_with_gallery_dl(src, output_dir)
+    if has_gallery_dl and target_url:
+        scrape_with_gallery_dl(target_url, output_dir)
 
     download_direct_assets(output_dir)
 

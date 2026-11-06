@@ -14,19 +14,22 @@ def auto_tag_images(input_dir="dataset/raw", output_dir="dataset"):
     os.makedirs(output_dir, exist_ok=True)
     unified_metadata = {}
 
-    scraper_meta_path = os.path.join(input_dir, "metadata_fallback.json")
+    # Check both metadata_sources.json and metadata_fallback.json
     scraper_meta = {}
-    if os.path.exists(scraper_meta_path):
-        try:
-            with open(scraper_meta_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                for item in data:
-                    scraper_meta[item["filename"]] = item
-            log("تم العثور على أوزان وبيانات وصفية مرجعية مسبقة للصور المنسوخة.",
-                "Found reference metadata for scraped images.")
-        except Exception as e:
-            log(f"فشل قراءة بيانات المرجعية المسبقة: {e}. سيتم التوسيم التحليلي المباشر.",
-                f"Failed to read reference metadata: {e}. Continuing with direct analytical tagging.")
+    for meta_file in ["metadata_sources.json", "metadata_fallback.json"]:
+        scraper_meta_path = os.path.join(input_dir, meta_file)
+        if os.path.exists(scraper_meta_path):
+            try:
+                with open(scraper_meta_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    items = data.get("metadata", data) if isinstance(data, dict) else data
+                    for item in items:
+                        scraper_meta[item["filename"]] = item
+                log(f"تم العثور على أوزان وبيانات وصفية مرجعية مسبقة في {meta_file}.",
+                    f"Found reference metadata in {meta_file}.")
+                break
+            except Exception as e:
+                log(f"فشل قراءة {meta_file}: {e}", f"Failed to read {meta_file}: {e}")
 
     valid_extensions = (".png", ".jpg", ".jpeg")
     images = [f for f in os.listdir(input_dir) if f.lower().endswith(valid_extensions)]
