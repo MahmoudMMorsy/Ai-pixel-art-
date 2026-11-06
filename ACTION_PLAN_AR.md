@@ -1,6 +1,6 @@
 # 🚀 خطة العمل التنفيذية السريعة (Strategic Execution Guide)
 
-دليلك العملي لتشغيل سحب البيانات، تدريب النموذج، وتوليد وتعديل صور البيكسل آرت بصيغة GGUF محلياً بالكامل.
+دليلك العملي لتشغيل سحب البيانات بأداة gallery-dl، تدريب النموذج، وتوليد وتعديل صور البيكسل آرت بصيغة GGUF محلياً بالكامل على المعالج المركزي (CPU) بدون كارت شاشة.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### 1. تثبيت الحزم المطلوبة:
 ```bash
-python3 -m pip install -r tiny_retro_diffusion/requirements.txt -r retro_sd_quantizer/requirements.txt gguf safetensors gallery-dl
+python3 -m pip install -r tiny_retro_diffusion/requirements.txt -r retro_sd_quantizer/requirements.txt gguf safetensors gallery-dl arabic-reshaper python-bidi
 ```
 
 ### 2. سحب البيانات عبر gallery-dl أو التخليق الإجرائي:
@@ -31,7 +31,7 @@ python3 tiny_retro_diffusion/generate_large_arabic_gguf.py --prompt "retro pixel
 python3 tiny_retro_diffusion/generate_large_arabic_gguf.py --prompt "game boy space fighter craft" --arabic "صقر الفضاء" --palette gameboy
 
 # تعديل صورة موجودة (Img2Img):
-python3 tiny_retro_diffusion/generate_large_arabic_gguf.py --mode img2img --init_image test.png --arabic "تعديل ريترو" --strength 0.65
+python3 tiny_retro_diffusion/generate_large_arabic_gguf.py --mode img2img --init_image test.png --arabic "تعديل ريترو" --strength 0.65 --palette nes
 ```
 
 ### 5. تشغيل خط الإنتاج الموحد بضغطة زر:

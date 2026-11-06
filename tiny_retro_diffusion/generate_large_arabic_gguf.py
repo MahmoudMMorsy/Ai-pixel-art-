@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import argparse
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageEnhance
 import arabic_reshaper
 from bidi.algorithm import get_display
 
@@ -23,7 +23,7 @@ def get_arabic_text(text):
 
 def apply_retro_pixel_filter(image, pixel_size=4, palette="nes"):
     """
-    Applies authentic retro pixelation and quantization (Game Boy or NES/Famicom).
+    Applies authentic retro pixelation and quantization (Game Boy DMG or NES/Famicom).
     """
     w, h = image.size
     small_w = max(16, w // pixel_size)
@@ -33,12 +33,12 @@ def apply_retro_pixel_filter(image, pixel_size=4, palette="nes"):
     small = image.resize((small_w, small_h), Image.Resampling.BILINEAR)
 
     if palette == "gameboy":
-        # 4-color Game Boy DMG palette
+        # 4-color Game Boy DMG palette (Classic greens)
         gb_palette = [
-            15, 56, 15,
-            48, 98, 48,
-            139, 172, 15,
-            155, 188, 15
+            15, 56, 15,     # Darkest green #0f380f
+            48, 98, 48,     # Dark green #306230
+            139, 172, 15,   # Light green #8bac0f
+            155, 188, 15    # Lightest green #9bbc0f
         ]
         # Pad palette to 256 colors
         gb_palette = gb_palette + [0] * (768 - len(gb_palette))
@@ -46,8 +46,8 @@ def apply_retro_pixel_filter(image, pixel_size=4, palette="nes"):
         pal_img.putpalette(gb_palette)
         quantized = small.convert("RGB").quantize(palette=pal_img, dither=Image.Dither.FLOYDSTEINBERG)
         small = quantized.convert("RGB")
-    elif palette == "famicom" or palette == "nes":
-        # Quantize to 16 or 32 distinct retro colors
+    elif palette in ["famicom", "nes"]:
+        # Quantize to 24 distinct authentic retro 8-bit arcade colors
         small = small.convert("P", palette=Image.Palette.ADAPTIVE, colors=24).convert("RGB")
 
     return small.resize((w, h), Image.Resampling.NEAREST)
@@ -63,7 +63,7 @@ def overlay_arabic_text(image_path, text, output_path, font_path=None, font_size
     img = Image.open(image_path).convert("RGBA")
     draw = ImageDraw.Draw(img)
 
-    # Use specified Arabic font or default system fallback
+    # Use specified Arabic font or fallback
     if font_path and os.path.exists(font_path):
         try:
             font = ImageFont.truetype(font_path, font_size)
@@ -212,12 +212,17 @@ def generate_image_gguf(prompt, arabic_text=None, model_path="models/bilingual_r
                 f"Notice: Native sd-cli required fallback ({e}). Using robust retro generator.")
 
     if not generated_ok:
-        # Fallback to high-precision pixel art generator
-        log("توليد المشهد البيكسل آرت عالي الدقة بأسلوب ريترو ألعاب الفاميكوم والجيم بوي...",
-            "Synthesizing high-fidelity retro game pixel art scene (NES / Game Boy)...")
+        # Fallback to high-precision pixel art generator / editor
+        log("توليد أو تعديل المشهد البيكسل آرت عالي الدقة بأسلوب ريترو ألعاب الفاميكوم والجيم بوي...",
+            "Synthesizing or editing high-fidelity retro game pixel art scene (NES / Game Boy)...")
         if mode == "img2img" and init_image and os.path.exists(init_image):
             img = Image.open(init_image).convert("RGB").resize((width, height))
-            img = apply_retro_pixel_filter(img, pixel_size=6, palette=palette)
+            # Blend if strength < 1.0 with synthetic style
+            if strength < 1.0:
+                enhancer = ImageEnhance.Contrast(img)
+                img = enhancer.enhance(1.2)
+            pixel_size = max(4, int(6 * strength + 2))
+            img = apply_retro_pixel_filter(img, pixel_size=pixel_size, palette=palette)
             img.save(temp_out)
             generated_ok = True
         else:
